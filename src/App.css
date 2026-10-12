@@ -100,7 +100,7 @@
 }
 
 .team-score-points {
-  margin: 2px 0 10px;
+  margin: 2px 0 8px;
   font-size: 52px;
   font-weight: 800;
   line-height: 1;
@@ -116,47 +116,60 @@
   color: var(--wgm-green);
 }
 
-.progress-track {
+/* Single competition bar: blue from the left, green from the right. */
+.score-bar {
   position: relative;
   width: 100%;
-  height: 8px;
+  height: 12px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--surface-soft);
 }
 
-/* The light projected line sits underneath the solid actual line. */
-.progress-fill,
-.progress-projected {
+/* The light projected shades sit underneath the solid actual scores. */
+.score-bar-fill {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
-  border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-/* Challengers' bars fill from the right, towards the centre. */
-.team-score-challengers .progress-fill,
-.team-score-challengers .progress-projected {
-  right: 0;
-  left: auto;
-}
-
-.team-score-home .progress-fill {
+.score-bar-fill.is-home {
+  left: 0;
   background: var(--wgm-blue);
 }
 
-.team-score-challengers .progress-fill {
+.score-bar-fill.is-challengers {
+  right: 0;
   background: var(--wgm-green);
 }
 
-.team-score-home .progress-projected {
+.score-bar-fill.is-home.is-projected {
   background: var(--wgm-blue-light);
 }
 
-.team-score-challengers .progress-projected {
+.score-bar-fill.is-challengers.is-projected {
   background: var(--wgm-green-light);
+}
+
+/* Halfway mark (9 of 18): a team must pass it to win. */
+.score-bar-midpoint {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--wgm-navy);
+}
+
+.score-bar-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .scoreboard-projected {
@@ -182,7 +195,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 14px;
+  padding-bottom: 12px;
   color: var(--muted);
 }
 
