@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 import { getProjectedPoints, getTeamPoints, getTournamentStatus } from './lib/tournament.js'
+import { canScoreMatch } from './lib/scoring.js'
 import { useTournament } from './state/useTournament.js'
 import { useCurrentPlayer } from './state/useCurrentPlayer.js'
 import Header from './components/Header.jsx'
@@ -12,6 +13,7 @@ import PlayersView from './components/PlayersView.jsx'
 import ResultsView from './components/ResultsView.jsx'
 import WhoAreYou from './components/WhoAreYou.jsx'
 import AdminView from './components/admin/AdminView.jsx'
+import Scorecard from './components/Scorecard.jsx'
 
 const TABS = ['Leaderboard', 'Matches', 'Players', 'Results']
 
@@ -26,10 +28,11 @@ function App() {
   )
   const points = getTeamPoints(matches, holesPerMatch)
   const projected = getProjectedPoints(matches, holesPerMatch)
-  const status = getTournamentStatus(matches, days)
+  const status = getTournamentStatus(matches, days, holesPerMatch)
 
   const [activeTab, setActiveTab] = useState('Leaderboard')
   const [activeDay, setActiveDay] = useState(status.currentDay)
+  const [scoringMatchId, setScoringMatchId] = useState(null)
 
   const currentPlayer = playersById[currentPlayerId]
   if (!currentPlayer) {
@@ -44,6 +47,45 @@ function App() {
 
   const dayMatches = matches.filter((m) => m.day === activeDay)
   const showDays = tab === 'Leaderboard' || tab === 'Matches'
+
+  // Scoring: only the four players in a match's group, or an admin, can open it.
+  const canOpenMatch = (match) =>
+    Boolean(match.homePlayerId && match.challengerPlayerId) &&
+    canScoreMatch(tournament, match, currentPlayerId)
+  const openableToday = dayMatches.some(canOpenMatch)
+  const scoringMatch = matches.find((m) => m.id === scoringMatchId)
+
+  if (scoringMatch && canOpenMatch(scoringMatch)) {
+    return (
+      <div className="app">
+        <Header
+          statusLabel={status.label}
+          currentPlayer={currentPlayer}
+          onChangePlayer={() => {
+            setScoringMatchId(null)
+            setCurrentPlayerId(null)
+          }}
+        />
+        <main className="page">
+          <Scorecard
+            key={scoringMatch.id}
+            tournament={tournament}
+            match={scoringMatch}
+            home={playersById[scoringMatch.homePlayerId]}
+            challenger={playersById[scoringMatch.challengerPlayerId]}
+            currentPlayerId={currentPlayerId}
+            apply={apply}
+            onBack={() => setScoringMatchId(null)}
+          />
+        </main>
+      </div>
+    )
+  }
+
+  const openScorecard = (match) => {
+    setScoringMatchId(match.id)
+    window.scrollTo(0, 0)
+  }
 
   return (
     <div className="app">
@@ -90,12 +132,23 @@ function App() {
 
         <section className="tab-panel" aria-label={tab}>
           {tab === 'Leaderboard' && (
-            <MatchBoard
-              matches={dayMatches}
-              teams={teams}
-              playersById={playersById}
-              holesPerMatch={holesPerMatch}
-            />
+            <>
+              {openableToday && (
+                <p className="score-hint">
+                  {isAdmin
+                    ? 'Tap a match to enter or correct scores.'
+                    : "Tap your group's matches to enter scores."}
+                </p>
+              )}
+              <MatchBoard
+                matches={dayMatches}
+                teams={teams}
+                playersById={playersById}
+                holesPerMatch={holesPerMatch}
+                canOpen={canOpenMatch}
+                onOpen={openScorecard}
+              />
+            </>
           )}
           {tab === 'Matches' && (
             <MatchSchedule

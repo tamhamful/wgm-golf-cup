@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { setGroupScorer, setMatchPlayer } from '../../lib/admin.js'
 import { STATUS, STATUS_LABEL } from '../../lib/tournament.js'
+import { getMatchStatus } from '../../lib/scoring.js'
 import DaySelector from '../DaySelector.jsx'
 
 // Choosing a player who is already in another match that day swaps the two
@@ -8,7 +9,7 @@ import DaySelector from '../DaySelector.jsx'
 function PlayerSelect({ match, side, tournament, run }) {
   const field = side === 'HOME' ? 'homePlayerId' : 'challengerPlayerId'
   const teamPlayers = tournament.players.filter((p) => p.teamId === side)
-  const locked = match.state.status !== STATUS.NOT_STARTED
+  const locked = getMatchStatus(match, tournament.holesPerMatch) !== STATUS.NOT_STARTED
 
   return (
     <select
@@ -77,7 +78,8 @@ export default function AdminPairings({ tournament, run }) {
             </div>
 
             {groupMatches.map((match) => {
-              const locked = match.state.status !== STATUS.NOT_STARTED
+              const status = getMatchStatus(match, tournament.holesPerMatch)
+              const locked = status !== STATUS.NOT_STARTED
               return (
                 <div key={match.id} className="pairing-row">
                   <span className="pairing-number">M{match.number}</span>
@@ -85,7 +87,7 @@ export default function AdminPairings({ tournament, run }) {
                   <span className="pairing-v">v</span>
                   <PlayerSelect match={match} side="CHALLENGERS" tournament={tournament} run={run} />
                   {locked && (
-                    <span className="pairing-locked">{STATUS_LABEL[match.state.status]} · locked</span>
+                    <span className="pairing-locked">{STATUS_LABEL[status]} · locked</span>
                   )}
                 </div>
               )

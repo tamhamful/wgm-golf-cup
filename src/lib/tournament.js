@@ -1,11 +1,11 @@
 // Tournament calculations. Screens read from here rather than working out
 // positions or points themselves, so there is one source of truth.
+// Match positions come from the scoring engine (scoring.js), which works
+// them out from the hole-by-hole results.
 
-export const STATUS = {
-  NOT_STARTED: 'NOT_STARTED',
-  LIVE: 'LIVE',
-  COMPLETE: 'COMPLETE',
-}
+import { computeMatchState, getMatchStatus, STATUS } from './scoring.js'
+
+export { STATUS }
 
 // Shown in place of a player who hasn't been chosen for a match yet.
 export const UNASSIGNED_PLAYER = { id: null, name: 'TBC' }
@@ -23,7 +23,7 @@ export const STATUS_LABEL = {
 //   holesPlayed: number of holes completed
 //   points: { HOME, CHALLENGERS } for completed matches, otherwise null
 export function describeMatch(match, holesPerMatch = 18) {
-  const { state } = match
+  const state = computeMatchState(match.holes, holesPerMatch)
 
   if (state.status === STATUS.LIVE) {
     const holes = state.holesPlayed
@@ -38,15 +38,10 @@ export function describeMatch(match, holesPerMatch = 18) {
   }
 
   if (state.status === STATUS.COMPLETE) {
-    const remaining = holesPerMatch - state.holesPlayed
-    let position = 'HALVED'
-    if (state.winner) {
-      position = remaining > 0 ? `${state.margin}&${remaining}` : `${state.margin} UP`
-    }
     return {
       status: STATUS.COMPLETE,
-      side: state.winner ?? null,
-      position,
+      side: state.winner,
+      position: state.result,
       detail: 'FINAL',
       holesPlayed: state.holesPlayed,
       points: {
@@ -97,11 +92,11 @@ export function getProjectedPoints(matches, holesPerMatch) {
   return totals
 }
 
-export function getTournamentStatus(matches, days) {
+export function getTournamentStatus(matches, days, holesPerMatch) {
   const dayStatus = (day) => {
-    const dayMatches = matches.filter((m) => m.day === day)
-    if (dayMatches.every((m) => m.state.status === STATUS.COMPLETE)) return 'complete'
-    if (dayMatches.every((m) => m.state.status === STATUS.NOT_STARTED)) return 'not-started'
+    const statuses = matches.filter((m) => m.day === day).map((m) => getMatchStatus(m, holesPerMatch))
+    if (statuses.every((s) => s === STATUS.COMPLETE)) return 'complete'
+    if (statuses.every((s) => s === STATUS.NOT_STARTED)) return 'not-started'
     return 'in-progress'
   }
 

@@ -8,7 +8,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { createDemoTournament } from '../data/demoTournament.js'
 
 const STORAGE_KEY = 'wgm-golf-cup:tournament'
-const CURRENT_VERSION = 1
+// Bump when the saved data layout changes; older saved data is replaced by the demo.
+const CURRENT_VERSION = 2
 
 function loadTournament() {
   try {

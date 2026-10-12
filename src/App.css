@@ -1271,3 +1271,327 @@
     display: none;
   }
 }
+
+/* ---------- Clickable leaderboard rows ---------- */
+
+button.match-row {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+}
+
+.match-row.is-clickable:hover .match-player:not(.is-leading) {
+  background: #e9ecf1;
+}
+
+.match-row.is-clickable:hover .match-player.is-leading {
+  filter: brightness(0.94);
+}
+
+.match-row.is-clickable:focus-visible {
+  outline: 2px solid var(--wgm-navy);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+.score-hint {
+  margin-bottom: 8px;
+  color: var(--wgm-blue-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.info-box {
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: #e9f4f9;
+  color: var(--wgm-blue-2);
+  font-size: 13px;
+}
+
+/* ---------- Scorecard ---------- */
+
+.scorecard {
+  padding-top: 14px;
+}
+
+.back-link {
+  font-size: 14px;
+}
+
+.scorecard-meta {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scorecard-players {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.scorecard-player {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-bottom: 3px solid var(--wgm-blue);
+  font-size: 17px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.scorecard-player.is-challengers {
+  border-bottom-color: var(--wgm-green);
+  text-align: right;
+}
+
+.scorecard-team {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scorecard-v {
+  padding-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.scorecard-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.scorecard-status strong {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.scorecard-status span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scorecard-status.is-home {
+  background: var(--wgm-blue);
+}
+
+.scorecard-status.is-challengers {
+  background: var(--wgm-green);
+}
+
+.scorecard-status.is-home strong,
+.scorecard-status.is-home span,
+.scorecard-status.is-challengers strong,
+.scorecard-status.is-challengers span {
+  color: #fff;
+}
+
+.hole-entry {
+  margin-bottom: 18px;
+}
+
+.hole-entry-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.hole-entry-title span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hole-entry-buttons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.result-button {
+  min-height: 64px;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.result-button.is-home {
+  background: var(--wgm-blue);
+  color: #fff;
+}
+
+.result-button.is-challengers {
+  background: var(--wgm-green);
+  color: #fff;
+}
+
+.result-button.is-halved {
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.result-button:active {
+  filter: brightness(0.9);
+}
+
+.hole-entry-actions {
+  display: flex;
+  justify-content: center;
+  min-height: 36px;
+  margin-top: 6px;
+}
+
+.hole-grid-heading {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hole-grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.hole-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 46px;
+  padding: 4px 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.hole-cell:disabled {
+  cursor: default;
+}
+
+.hole-number {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.hole-mark {
+  min-height: 16px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hole-cell.is-home {
+  border-color: var(--wgm-blue);
+  background: var(--wgm-blue);
+}
+
+.hole-cell.is-challengers {
+  border-color: var(--wgm-green);
+  background: var(--wgm-green);
+}
+
+.hole-cell.is-home .hole-number,
+.hole-cell.is-home .hole-mark,
+.hole-cell.is-challengers .hole-number,
+.hole-cell.is-challengers .hole-mark {
+  color: #fff;
+}
+
+.hole-cell.is-halved {
+  background: var(--surface-soft);
+}
+
+.hole-cell.is-active {
+  outline: 2px solid var(--wgm-navy);
+  outline-offset: 1px;
+}
+
+.hole-totals {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hole-totals .is-home {
+  color: #1b7396;
+  font-weight: 600;
+}
+
+.hole-totals .is-challengers {
+  color: var(--wgm-green);
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 560px) {
+  .scorecard-player {
+    font-size: 15px;
+  }
+
+  .scorecard-status strong {
+    font-size: 17px;
+  }
+
+  .hole-entry-buttons {
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  }
+
+  .result-button {
+    min-height: 60px;
+    font-size: 14px;
+  }
+
+  .hole-grid {
+    gap: 2px;
+  }
+
+  .hole-cell {
+    min-height: 42px;
+  }
+
+  .hole-mark {
+    font-size: 10px;
+  }
+}

@@ -5,8 +5,8 @@
 // Teams are identified by stable IDs (HOME / CHALLENGERS). The display names
 // can change without affecting scoring.
 //
-// Match states are a temporary snapshot. In Stage 3 they will be replaced by
-// hole-by-hole results, and the match position will be calculated from those.
+// Each match stores only its hole-by-hole results. Positions such as "1 UP"
+// and "2&1" are calculated from these by the scoring engine (lib/scoring.js).
 
 const players = [
   { id: 'h1', name: 'Tom Hamilton', teamId: 'HOME' },
@@ -23,15 +23,14 @@ const players = [
   { id: 'c6', name: 'Alan Murray', teamId: 'CHALLENGERS' },
 ]
 
-// [day, home player, challengers player, state]
-// state.status: NOT_STARTED | LIVE | COMPLETE
-// state.leader / state.winner: HOME | CHALLENGERS | null (null = all square / halved)
-const NS = { status: 'NOT_STARTED' }
+// [day, home player, challengers player, hole results]
+// Hole results shorthand: H = Home player won, C = Challenger won, = = halved
+const NS = ''
 const fixtures = [
-  [1, 'h1', 'c1', { status: 'LIVE', leader: 'HOME', margin: 1, holesPlayed: 14 }],
-  [1, 'h2', 'c2', { status: 'LIVE', leader: 'CHALLENGERS', margin: 2, holesPlayed: 12 }],
-  [1, 'h3', 'c3', { status: 'COMPLETE', winner: 'HOME', margin: 2, holesPlayed: 17 }],
-  [1, 'h4', 'c4', { status: 'LIVE', leader: null, margin: 0, holesPlayed: 8 }],
+  [1, 'h1', 'c1', 'HC=H==CH=HC==='],    // Home 1 UP through 14
+  [1, 'h2', 'c2', 'C=HC=C=HC==='],      // Challengers 2 UP through 12
+  [1, 'h3', 'c3', 'H=CH=H=C=H=C==H=='], // Home wins 2&1
+  [1, 'h4', 'c4', 'HC==CH=='],          // All square through 8
   [1, 'h5', 'c5', NS],
   [1, 'h6', 'c6', NS],
   // Day 2 and Day 3: sample pairings, not yet played
@@ -44,7 +43,9 @@ const fixtures = [
 const MATCHES_PER_DAY = 6
 const MATCHES_PER_GROUP = 2
 
-const matches = fixtures.map(([day, homePlayerId, challengerPlayerId, state], index) => {
+const HOLE_CODES = { H: 'HOME', C: 'CHALLENGERS', '=': 'HALVED' }
+
+const matches = fixtures.map(([day, homePlayerId, challengerPlayerId, holeCodes], index) => {
   const numberInDay = (index % MATCHES_PER_DAY) + 1
   const groupNumber = Math.ceil(numberInDay / MATCHES_PER_GROUP)
   return {
@@ -54,7 +55,7 @@ const matches = fixtures.map(([day, homePlayerId, challengerPlayerId, state], in
     groupId: `d${day}g${groupNumber}`,
     homePlayerId,
     challengerPlayerId,
-    state: { ...state },
+    holes: [...holeCodes].map((code) => HOLE_CODES[code]),
   }
 })
 
@@ -70,7 +71,7 @@ const groups = [1, 2, 3].flatMap((day) =>
 
 export function createDemoTournament() {
   return structuredClone({
-    version: 1,
+    version: 2,
     name: 'WGM Golf Cup',
     isDemo: true,
     days: [1, 2, 3],

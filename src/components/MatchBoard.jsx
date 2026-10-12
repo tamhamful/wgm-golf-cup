@@ -1,6 +1,6 @@
 import { describeMatch, STATUS, UNASSIGNED_PLAYER } from '../lib/tournament.js'
 
-function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch }) {
+function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch, onOpen }) {
   const view = describeMatch(match, holesPerMatch)
   const started = view.status !== STATUS.NOT_STARTED
   const homeLeads = view.side === 'HOME'
@@ -25,17 +25,18 @@ function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch }) {
       : `${homePlayer.name} v ${challengerPlayer.name}: ${view.position.toLowerCase()}, ${view.detail.toLowerCase()}`
   }
 
-  return (
-    <li className={`match-row status-${view.status.toLowerCase()}`} aria-label={summary}>
-      <div
+  // Spans rather than divs so the row can sit inside a button.
+  const content = (
+    <>
+      <span
         className={`match-player match-player-home ${homeLeads ? 'is-leading' : ''}`}
         aria-hidden="true"
       >
         <span className="match-player-name">{homePlayer.name}</span>
         {homeScore && <span className="match-score">{homeScore}</span>}
-      </div>
+      </span>
 
-      <div className="match-centre" aria-hidden="true">
+      <span className="match-centre" aria-hidden="true">
         <span
           className={
             view.status === STATUS.LIVE
@@ -45,20 +46,42 @@ function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch }) {
         >
           {centre}
         </span>
-      </div>
+      </span>
 
-      <div
+      <span
         className={`match-player match-player-challengers ${challengersLead ? 'is-leading' : ''}`}
         aria-hidden="true"
       >
         {challengerScore && <span className="match-score">{challengerScore}</span>}
         <span className="match-player-name">{challengerPlayer.name}</span>
-      </div>
+      </span>
+    </>
+  )
+
+  const rowClass = `match-row status-${view.status.toLowerCase()}`
+
+  // Only players in this match's group (and admins) get a clickable row.
+  return (
+    <li>
+      {onOpen ? (
+        <button
+          type="button"
+          className={`${rowClass} is-clickable`}
+          aria-label={`${summary}. Open scorecard`}
+          onClick={() => onOpen(match)}
+        >
+          {content}
+        </button>
+      ) : (
+        <div className={rowClass} aria-label={summary} role="group">
+          {content}
+        </div>
+      )}
     </li>
   )
 }
 
-export default function MatchBoard({ matches, teams, playersById, holesPerMatch }) {
+export default function MatchBoard({ matches, teams, playersById, holesPerMatch, canOpen, onOpen }) {
   return (
     <div className="match-board">
       <div className="match-board-header">
@@ -75,6 +98,7 @@ export default function MatchBoard({ matches, teams, playersById, holesPerMatch 
             homePlayer={playersById[match.homePlayerId] ?? UNASSIGNED_PLAYER}
             challengerPlayer={playersById[match.challengerPlayerId] ?? UNASSIGNED_PLAYER}
             holesPerMatch={holesPerMatch}
+            onOpen={canOpen(match) ? onOpen : null}
           />
         ))}
       </ol>

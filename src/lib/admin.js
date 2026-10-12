@@ -3,9 +3,8 @@
 // If a change isn't allowed, it throws an Error with a plain-English message
 // that the Admin screen shows to the user.
 
-import { STATUS } from './tournament.js'
-
-const isStarted = (match) => match.state.status !== STATUS.NOT_STARTED
+// A match has started once any hole has been recorded.
+const isStarted = (match) => match.holes.length > 0
 const playersInMatch = (m) => [m.homePlayerId, m.challengerPlayerId]
 
 function findPlayer(t, playerId) {
