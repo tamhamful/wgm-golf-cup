@@ -117,22 +117,30 @@
 }
 
 .progress-track {
-  display: flex;
+  position: relative;
   width: 100%;
-  height: 6px;
+  height: 8px;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--surface-soft);
 }
 
-/* Challengers' bar fills from the right, towards the centre. */
-.team-score-challengers .progress-track {
-  justify-content: flex-end;
+/* The light projected line sits underneath the solid actual line. */
+.progress-fill,
+.progress-projected {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
+/* Challengers' bars fill from the right, towards the centre. */
+.team-score-challengers .progress-fill,
+.team-score-challengers .progress-projected {
+  right: 0;
+  left: auto;
 }
 
 .team-score-home .progress-fill {
@@ -141,6 +149,33 @@
 
 .team-score-challengers .progress-fill {
   background: var(--wgm-green);
+}
+
+.team-score-home .progress-projected {
+  background: var(--wgm-blue-light);
+}
+
+.team-score-challengers .progress-projected {
+  background: var(--wgm-green-light);
+}
+
+.scoreboard-projected {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.projected-key {
+  width: 16px;
+  height: 6px;
+  flex: 0 0 16px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--wgm-blue-light) 50%, var(--wgm-green-light) 50%);
 }
 
 .scoreboard-target {
@@ -166,7 +201,7 @@
 }
 
 .scoreboard-summary {
-  margin-top: 10px;
+  margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
   text-align: center;

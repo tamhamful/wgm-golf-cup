@@ -7,6 +7,10 @@
   --wgm-navy: #0a1d49;
   --wgm-blue-2: #2a4379;
 
+  /* Light tints of the team colours, used for projected scores */
+  --wgm-blue-light: #a8d8ea;
+  --wgm-green-light: #a6cdb1;
+
   /* Neutrals */
   --text: #0a1d49;
   --muted: #5e6878;

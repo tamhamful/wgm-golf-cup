@@ -72,6 +72,24 @@ export function getTeamPoints(matches, holesPerMatch) {
   return totals
 }
 
+// Projected points: completed matches as they finished, plus live matches
+// as they currently stand (leader gets 1, all square gets 0.5 each).
+// Unstarted matches add nothing. This is an indication only, never awarded.
+export function getProjectedPoints(matches, holesPerMatch) {
+  const totals = getTeamPoints(matches, holesPerMatch)
+  for (const match of matches) {
+    const view = describeMatch(match, holesPerMatch)
+    if (view.status !== STATUS.LIVE) continue
+    if (view.side) {
+      totals[view.side] += 1
+    } else {
+      totals.HOME += 0.5
+      totals.CHALLENGERS += 0.5
+    }
+  }
+  return totals
+}
+
 export function getTournamentStatus(matches, days) {
   const dayStatus = (day) => {
     const dayMatches = matches.filter((m) => m.day === day)

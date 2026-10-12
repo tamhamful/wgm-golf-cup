@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 import { demoTournament } from './data/demoTournament.js'
-import { getTeamPoints, getTournamentStatus } from './lib/tournament.js'
+import { getProjectedPoints, getTeamPoints, getTournamentStatus } from './lib/tournament.js'
 import Header from './components/Header.jsx'
 import Scoreboard from './components/Scoreboard.jsx'
 import DaySelector from './components/DaySelector.jsx'
@@ -21,6 +21,7 @@ function App() {
     [players],
   )
   const points = getTeamPoints(matches, holesPerMatch)
+  const projected = getProjectedPoints(matches, holesPerMatch)
   const status = getTournamentStatus(matches, days)
 
   const [activeTab, setActiveTab] = useState('Leaderboard')
@@ -43,6 +44,7 @@ function App() {
         <Scoreboard
           teams={teams}
           points={points}
+          projected={projected}
           target={targetPoints}
           totalMatches={matches.length}
         />
