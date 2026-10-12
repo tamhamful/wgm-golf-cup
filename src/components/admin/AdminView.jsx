@@ -2,6 +2,8 @@ import { useState } from 'react'
 import AdminTeams from './AdminTeams.jsx'
 import AdminPairings from './AdminPairings.jsx'
 import AdminSettings from './AdminSettings.jsx'
+import DaySelector from '../DaySelector.jsx'
+import { setCurrentDay } from '../../lib/admin.js'
 
 const SECTIONS = ['Teams & players', 'Pairings', 'Settings']
 
@@ -23,6 +25,18 @@ export default function AdminView({ tournament, apply, reset }) {
         Changes are saved <strong>on this device only</strong> until the online database is set up.
         Other people won't see them yet.
       </p>
+
+      <section className="current-day">
+        <div>
+          <h3 className="admin-subheading">Leaderboard day</h3>
+          <p className="settings-help">Everyone's leaderboard opens on this day.</p>
+        </div>
+        <DaySelector
+          days={tournament.days}
+          activeDay={tournament.currentDay ?? tournament.days[0]}
+          onChange={(day) => run(setCurrentDay, day)}
+        />
+      </section>
 
       <div className="admin-sections" role="group" aria-label="Admin sections">
         {SECTIONS.map((name) => (

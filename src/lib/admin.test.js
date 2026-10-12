@@ -72,6 +72,12 @@ test('there must always be at least one admin', () => {
   assert.deepEqual(t.adminIds, ['c1'])
 })
 
+test('admin sets the current day', () => {
+  const t = A.setCurrentDay(createDemoTournament(), 2)
+  assert.equal(t.currentDay, 2)
+  assert.throws(() => A.setCurrentDay(t, 4), /not part/)
+})
+
 test('points to win must be sensible', () => {
   const t = createDemoTournament()
   assert.throws(() => A.setTargetPoints(t, 0))

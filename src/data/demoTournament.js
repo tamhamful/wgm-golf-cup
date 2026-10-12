@@ -75,6 +75,7 @@ export function createDemoTournament() {
     name: 'WGM Golf Cup',
     isDemo: true,
     days: [1, 2, 3],
+    currentDay: 1, // set by an admin; the leaderboard opens on this day
     targetPoints: 10,
     holesPerMatch: 18,
     teams: {

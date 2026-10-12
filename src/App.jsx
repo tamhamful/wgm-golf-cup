@@ -28,11 +28,22 @@ function App() {
   )
   const points = getTeamPoints(matches, holesPerMatch)
   const projected = getProjectedPoints(matches, holesPerMatch)
-  const status = getTournamentStatus(matches, days, holesPerMatch)
+  const currentDay = tournament.currentDay ?? days[0]
+  const status = getTournamentStatus(matches, days, holesPerMatch, currentDay)
 
   const [activeTab, setActiveTab] = useState('Leaderboard')
-  const [activeDay, setActiveDay] = useState(status.currentDay)
   const [scoringMatchId, setScoringMatchId] = useState(null)
+
+  // The leaderboard shows the admin's current day. A viewer can tap another
+  // day to look at it, but when the admin changes the day everyone follows.
+  const [viewedDay, setViewedDay] = useState(null)
+  const [followingDay, setFollowingDay] = useState(currentDay)
+  if (followingDay !== currentDay) {
+    setFollowingDay(currentDay)
+    setViewedDay(null)
+  }
+  const activeDay = viewedDay ?? currentDay
+  const setActiveDay = (day) => setViewedDay(day === currentDay ? null : day)
 
   const currentPlayer = playersById[currentPlayerId]
   if (!currentPlayer) {

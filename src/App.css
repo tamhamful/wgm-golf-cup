@@ -1595,3 +1595,30 @@ button.match-row {
     font-size: 10px;
   }
 }
+
+/* ---------- Admin: current day ---------- */
+
+.current-day {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.current-day .settings-help {
+  margin: 2px 0 0;
+}
+
+.current-day .day-selector {
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .current-day {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

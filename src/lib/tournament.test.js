@@ -44,9 +44,12 @@ test('projected points add live matches as they stand', () => {
   assert.deepEqual(getProjectedPoints(matches), { HOME: 2.5, CHALLENGERS: 1.5 })
 })
 
-test('tournament status', () => {
+test('tournament status follows the admin-set current day', () => {
   const t = createDemoTournament()
-  assert.equal(getTournamentStatus(t.matches, t.days, 18).label, 'Day 1 in progress')
+  assert.equal(getTournamentStatus(t.matches, t.days, 18, 1).label, 'Day 1 in progress')
+  assert.equal(getTournamentStatus(t.matches, t.days, 18, 2).label, 'Day 2 not started')
   for (const m of t.matches) m.holes = []
-  assert.equal(getTournamentStatus(t.matches, t.days, 18).label, 'Not started')
+  assert.equal(getTournamentStatus(t.matches, t.days, 18, 1).label, 'Not started')
+  for (const m of t.matches) m.holes = Array(10).fill('HOME')
+  assert.equal(getTournamentStatus(t.matches, t.days, 18, 3).label, 'Tournament complete')
 })

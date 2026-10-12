@@ -154,6 +154,12 @@ export function setAdmin(t, playerId, isAdmin) {
   return { ...t, adminIds: t.adminIds.filter((id) => id !== playerId) }
 }
 
+// The day everyone's leaderboard opens on.
+export function setCurrentDay(t, day) {
+  if (!t.days.includes(day)) throw new Error('That day is not part of the tournament.')
+  return { ...t, currentDay: day }
+}
+
 export function setTargetPoints(t, value) {
   const target = Number(value)
   const maxPoints = t.matches.length

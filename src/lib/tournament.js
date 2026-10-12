@@ -92,7 +92,8 @@ export function getProjectedPoints(matches, holesPerMatch) {
   return totals
 }
 
-export function getTournamentStatus(matches, days, holesPerMatch) {
+// Header label, based on the day the admin has set as the current day.
+export function getTournamentStatus(matches, days, holesPerMatch, currentDay) {
   const dayStatus = (day) => {
     const statuses = matches.filter((m) => m.day === day).map((m) => getMatchStatus(m, holesPerMatch))
     if (statuses.every((s) => s === STATUS.COMPLETE)) return 'complete'
@@ -100,18 +101,12 @@ export function getTournamentStatus(matches, days, holesPerMatch) {
     return 'in-progress'
   }
 
-  const statuses = days.map(dayStatus)
-  if (statuses.every((s) => s === 'complete')) {
-    return { label: 'Tournament complete', currentDay: days[days.length - 1] }
-  }
+  if (days.every((day) => dayStatus(day) === 'complete')) return { label: 'Tournament complete' }
 
-  const inProgress = days.find((_, i) => statuses[i] === 'in-progress')
-  if (inProgress) return { label: `Day ${inProgress} in progress`, currentDay: inProgress }
-
-  const nextDay = days.find((_, i) => statuses[i] === 'not-started')
-  const lastComplete = [...days].reverse().find((_, i) => statuses[days.length - 1 - i] === 'complete')
-  if (lastComplete) return { label: `Day ${lastComplete} complete`, currentDay: nextDay }
-  return { label: 'Not started', currentDay: days[0] }
+  const status = dayStatus(currentDay)
+  if (status === 'complete') return { label: `Day ${currentDay} complete` }
+  if (status === 'in-progress') return { label: `Day ${currentDay} in progress` }
+  return { label: currentDay === days[0] ? 'Not started' : `Day ${currentDay} not started` }
 }
 
 export function formatPoints(value) {
