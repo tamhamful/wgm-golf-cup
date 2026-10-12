@@ -190,12 +190,6 @@ function TournamentApp({ data, admin }) {
 
         {tab !== 'Admin' && <Ticker events={tickerEvents} />}
 
-        {tournament.isDemo && tab !== 'Admin' && (
-          <p className="demo-notice">
-            Demonstration only. These scores are sample values, not a live tournament.
-          </p>
-        )}
-
         {tab !== 'Admin' && (
           <Scoreboard
             teams={teams}

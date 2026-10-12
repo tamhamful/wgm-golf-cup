@@ -50,12 +50,12 @@ test('dormie', () => {
 
 test('match result names the winner, score and team', () => {
   const t = play(blank(), 'm3', 'H=CH=H=C=H=C==H==')
-  assert.ok(texts(t).includes('David Kelly wins 2&1: point to Home Team (Match 3)'))
+  assert.ok(texts(t).includes('David Kelly wins 2&1 for Home Team (Match 3)'))
 })
 
 test('halved match', () => {
   const t = play(blank(), 'm4', 'HC================')
-  assert.ok(texts(t).includes('Match 4 halved: James Wilson and Steven Clark take half a point each'))
+  assert.ok(texts(t).includes('James Wilson v Steven Clark halved (Match 4)'))
 })
 
 test('3 matches in a row says matches, for the team', () => {
@@ -71,11 +71,20 @@ test('overall lead, points needed and winning the Cup', () => {
   // Home win 10 matches, one after another
   t.matches.slice(0, 10).forEach((m, i) => play(t, m.id, 'HHHHHHHHHH', i * 20))
   const all = texts(t)
-  assert.ok(all.includes('Home Team take the overall lead: Home Team 1 – 0 Challengers'))
+  assert.ok(all.includes('Home Team take the overall lead, 1 – 0'))
   assert.ok(all.includes('Home Team need 2 more points to win the Cup'))
   assert.ok(all.includes('Home Team need 1 more point to win the Cup'))
-  assert.ok(all.includes('Home Team win the WGM Golf Cup! Home Team 10 – 0 Challengers'))
-  assert.ok(all.includes('Day 1 complete. Overall: Home Team 6 – 0 Challengers'))
+  assert.ok(all.includes('Home Team win the WGM Golf Cup! 10 – 0'))
+  assert.ok(all.includes('Day 1 complete: Home Team lead 6 – 0'))
+})
+
+test('scores read with the leading team first', () => {
+  let t = blank()
+  t = play(t, 'm1', 'CCCCCCCCCC', 0) // Challengers 1 – 0
+  t = play(t, 'm2', 'HHHHHHHHHH', 20) // level 1 – 1
+  const all = texts(t)
+  assert.ok(all.includes('Challengers take the overall lead, 1 – 0'))
+  assert.ok(all.includes('All level overall at 1 – 1'))
 })
 
 test('projection swing needs a team at least a point clear', () => {
@@ -86,7 +95,7 @@ test('projection swing needs a team at least a point clear', () => {
   t = play(t, 'm4', '=', 3) // 1.5 – 2.5, still Challengers: not news again
   const all = texts(t)
   assert.ok(all.includes('Projected score swings to Home Team: 1 – 0'))
-  assert.ok(all.includes('Projected score swings to Challengers: 1 – 2'))
+  assert.ok(all.includes('Projected score swings to Challengers: 2 – 1'))
   assert.ok(!all.some((x) => x.includes('level')))
   assert.equal(all.filter((x) => x.startsWith('Projected')).length, 2)
 })

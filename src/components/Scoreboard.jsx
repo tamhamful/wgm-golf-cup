@@ -31,10 +31,7 @@ function ScoreBar({ teams, points, projected, totalPoints }) {
 }
 
 export default function Scoreboard({ teams, points, projected, target, totalMatches }) {
-  const awarded = points.HOME + points.CHALLENGERS
-  const remaining = totalMatches - awarded
-  const hasProjection =
-    projected.HOME !== points.HOME || projected.CHALLENGERS !== points.CHALLENGERS
+  const remaining = totalMatches - points.HOME - points.CHALLENGERS
 
   return (
     <section className="scoreboard" aria-label="Overall team score">
@@ -54,17 +51,8 @@ export default function Scoreboard({ teams, points, projected, target, totalMatc
         <span>0</span>
       </div>
 
-      {hasProjection && (
-        <p className="scoreboard-projected">
-          <span className="projected-key" aria-hidden="true" />
-          Projected {formatPoints(projected.HOME)} – {formatPoints(projected.CHALLENGERS)} if
-          live matches finish as they stand
-        </p>
-      )}
-
       <p className="scoreboard-summary">
-        {formatPoints(awarded)} of {totalMatches} points awarded ·{' '}
-        {formatPoints(remaining)} remaining
+        {formatPoints(remaining)} point{remaining === 1 ? '' : 's'} remaining
       </p>
     </section>
   )

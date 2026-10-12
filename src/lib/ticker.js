@@ -63,13 +63,13 @@ function matchEvents(t, match, playerName) {
             id: `won-${match.id}`,
             kind: 'match-won',
             team: state.winner,
-            text: `${nameFor(state.winner)} wins ${state.result}: point to ${teams[state.winner].name} (${label})`,
+            text: `${nameFor(state.winner)} wins ${state.result} for ${teams[state.winner].name} (${label})`,
           }
         : {
             id: `halved-${match.id}`,
             kind: 'match-halved',
             team: null,
-            text: `${label} halved: ${home} and ${challenger} take half a point each`,
+            text: `${home} v ${challenger} halved (${label})`,
           }
     } else if (state.dormie && !previous.dormie) {
       event = {
@@ -151,8 +151,11 @@ function teamEvents(t) {
     const after = statusOf(matches.find((m) => m.id === step.matchId))
     const current = snapshot()
     const at = { time: step.time }
-    const score = (p) =>
-      `${teams.HOME.name} ${formatPoints(p.HOME)} – ${formatPoints(p.CHALLENGERS)} ${teams.CHALLENGERS.name}`
+    // Short score with the named team's points first, e.g. "5 – 4".
+    const score = (p, first = 'HOME') => {
+      const second = first === 'HOME' ? 'CHALLENGERS' : 'HOME'
+      return `${formatPoints(p[first])} – ${formatPoints(p[second])}`
+    }
 
     // A match has just finished
     if (before.status !== STATUS.COMPLETE && after.status === STATUS.COMPLETE) {
@@ -183,8 +186,8 @@ function teamEvents(t) {
           kind: 'overall-lead',
           team: newLeader,
           text: newLeader
-            ? `${teams[newLeader].name} take the overall lead: ${score(newPoints)}`
-            : `All level overall: ${score(newPoints)}`,
+            ? `${teams[newLeader].name} take the overall lead, ${score(newPoints, newLeader)}`
+            : `All level overall at ${score(newPoints)}`,
         })
       }
 
@@ -197,7 +200,7 @@ function teamEvents(t) {
             id: 'cup-won',
             kind: 'cup-won',
             team,
-            text: `${teams[team].name} win the WGM Golf Cup! ${score(newPoints)}`,
+            text: `${teams[team].name} win the WGM Golf Cup! ${score(newPoints, team)}`,
           })
         } else if (!cupWon && stillNeeded > 0 && stillNeeded <= NEED_POINTS_WITHIN && stillNeeded !== need[team]) {
           events.push({
@@ -223,7 +226,9 @@ function teamEvents(t) {
           id: `day-${match.day}`,
           kind: 'day-complete',
           team: newLeader,
-          text: `Day ${match.day} complete. Overall: ${score(newPoints)}`,
+          text: newLeader
+            ? `Day ${match.day} complete: ${teams[newLeader].name} lead ${score(newPoints, newLeader)}`
+            : `Day ${match.day} complete: all square at ${score(newPoints)}`,
         })
       }
 
@@ -233,8 +238,8 @@ function teamEvents(t) {
     // Projection swings: only when a team moves at least a point clear in the
     // projection (small flips back and forth aren't news).
     const projected = getProjectedPoints(current, holesPerMatch)
-    const projectedText = `${formatPoints(projected.HOME)} – ${formatPoints(projected.CHALLENGERS)}`
     const projectedTop = leaderOf(projected)
+    const projectedText = score(projected, projectedTop ?? 'HOME')
     const projectedGap = Math.abs(projected.HOME - projected.CHALLENGERS)
     if (projectedTop && projectedGap >= PROJECTION_GAP && projectedTop !== projectedLeader) {
       projectedLeader = projectedTop

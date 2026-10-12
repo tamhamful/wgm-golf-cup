@@ -56,15 +56,6 @@
   white-space: nowrap;
 }
 
-.demo-notice {
-  margin-top: 12px;
-  padding: 7px 10px;
-  border-radius: var(--radius);
-  background: var(--surface-soft);
-  color: var(--muted);
-  font-size: 12px;
-}
-
 /* ---------- Overall score ---------- */
 
 .scoreboard {
@@ -170,25 +161,6 @@
   color: var(--muted);
   font-size: 10px;
   font-weight: 600;
-}
-
-.scoreboard-projected {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  color: var(--muted);
-  font-size: 12px;
-  text-align: center;
-}
-
-.projected-key {
-  width: 16px;
-  height: 6px;
-  flex: 0 0 16px;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--wgm-blue-light) 50%, var(--wgm-green-light) 50%);
 }
 
 .scoreboard-target {
@@ -1725,6 +1697,7 @@ button.match-row {
   gap: 8px;
   flex: 1;
   min-width: 0;
+  padding: 6px 0;
   animation: ticker-in 0.35s ease;
 }
 
@@ -1732,7 +1705,6 @@ button.match-row {
 .ticker-strip .ticker-text {
   display: -webkit-box;
   overflow: hidden;
-  padding: 6px 0;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.3;
@@ -1823,6 +1795,18 @@ button.match-row {
 
   .ticker-strip .ticker-text {
     font-size: 12px;
+  }
+}
+
+/* The narrowest phones get a third line rather than cutting messages short. */
+@media (max-width: 380px) {
+  .ticker-strip {
+    min-height: 64px;
+  }
+
+  .ticker-strip .ticker-text {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
 
   .ticker-list li {
