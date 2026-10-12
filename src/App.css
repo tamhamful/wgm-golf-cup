@@ -283,7 +283,7 @@
 .match-board-header,
 .match-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 116px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 92px minmax(0, 1fr);
 }
 
 .match-board-header {
@@ -345,6 +345,7 @@
 .match-player {
   display: flex;
   align-items: center;
+  gap: 10px;
   min-width: 0;
   padding: 10px 12px;
   background: var(--surface-soft);
@@ -365,6 +366,29 @@
 .match-player-name {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Match score sits on the inner edge of the box, next to the centre column. */
+.match-score {
+  flex: 0 0 auto;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-player-home .match-score {
+  margin-left: auto;
+}
+
+.match-player-challengers .match-score {
+  margin-right: auto;
+}
+
+/* "AS" when all square: shown on both sides, not highlighted. */
+.match-player:not(.is-leading) .match-score {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .match-player.is-leading {
@@ -392,27 +416,12 @@
   text-align: center;
 }
 
-.match-position {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.match-through {
   color: var(--wgm-navy);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
-}
-
-.lead-arrow {
-  font-size: 12px;
-}
-
-.match-player-home.is-leading ~ .match-centre .lead-arrow {
-  color: var(--wgm-blue);
-}
-
-.match-player-home:not(.is-leading) ~ .match-centre .lead-arrow {
-  color: var(--wgm-green);
 }
 
 .match-detail {
@@ -420,10 +429,6 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
-}
-
-.match-detail.is-live {
-  color: var(--wgm-blue-2);
 }
 
 .match-not-started {
@@ -698,7 +703,7 @@
 
   .match-board-header,
   .match-row {
-    grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr);
   }
 
   .match-board-header {
@@ -719,18 +724,22 @@
   }
 
   .match-player {
+    gap: 6px;
     padding: 8px;
     font-size: 13px;
     line-height: 1.25;
   }
 
-  .match-position {
-    gap: 2px;
-    font-size: 13px;
+  .match-score {
+    font-size: 14px;
   }
 
-  .lead-arrow {
-    font-size: 10px;
+  .match-player:not(.is-leading) .match-score {
+    font-size: 12px;
+  }
+
+  .match-through {
+    font-size: 16px;
   }
 
   .match-detail {

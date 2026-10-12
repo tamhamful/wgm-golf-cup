@@ -17,6 +17,7 @@ export const STATUS_LABEL = {
 //   side: which team to highlight (HOME, CHALLENGERS or null)
 //   position: e.g. "1 UP", "ALL SQUARE", "2&1", "HALVED" (null if not started)
 //   detail: e.g. "14 HOLES", "FINAL", "NOT STARTED"
+//   holesPlayed: number of holes completed
 //   points: { HOME, CHALLENGERS } for completed matches, otherwise null
 export function describeMatch(match, holesPerMatch = 18) {
   const { state } = match
@@ -28,6 +29,7 @@ export function describeMatch(match, holesPerMatch = 18) {
       side: state.margin > 0 ? state.leader : null,
       position: state.margin > 0 ? `${state.margin} UP` : 'ALL SQUARE',
       detail: `${holes} ${holes === 1 ? 'HOLE' : 'HOLES'}`,
+      holesPlayed: holes,
       points: null,
     }
   }
@@ -43,6 +45,7 @@ export function describeMatch(match, holesPerMatch = 18) {
       side: state.winner ?? null,
       position,
       detail: 'FINAL',
+      holesPlayed: state.holesPlayed,
       points: {
         HOME: state.winner === 'HOME' ? 1 : state.winner ? 0 : 0.5,
         CHALLENGERS: state.winner === 'CHALLENGERS' ? 1 : state.winner ? 0 : 0.5,
@@ -55,6 +58,7 @@ export function describeMatch(match, holesPerMatch = 18) {
     side: null,
     position: null,
     detail: 'NOT STARTED',
+    holesPlayed: 0,
     points: null,
   }
 }
