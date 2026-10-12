@@ -17,6 +17,8 @@ import WhoAreYou from './components/WhoAreYou.jsx'
 import AdminView from './components/admin/AdminView.jsx'
 import AdminSignIn from './components/AdminSignIn.jsx'
 import Scorecard from './components/Scorecard.jsx'
+import Ticker from './components/Ticker.jsx'
+import { buildTickerEvents } from './lib/ticker.js'
 
 const TABS = ['Leaderboard', 'Matches', 'Players', 'Results']
 
@@ -67,7 +69,7 @@ function ConnectedApp() {
 }
 
 function TournamentApp({ data, admin }) {
-  const { tournament, apply, scoring, syncError, dismissSyncError } = data
+  const { tournament, notices, apply, scoring, syncError, dismissSyncError } = data
   const { teams, players, matches, days, targetPoints, holesPerMatch } = tournament
   const [currentPlayerId, setCurrentPlayerId] = useCurrentPlayer()
 
@@ -75,6 +77,7 @@ function TournamentApp({ data, admin }) {
     () => Object.fromEntries(players.map((p) => [p.id, p])),
     [players],
   )
+  const tickerEvents = useMemo(() => buildTickerEvents(tournament, notices), [tournament, notices])
   const points = getTeamPoints(matches, holesPerMatch)
   const projected = getProjectedPoints(matches, holesPerMatch)
   const currentDay = tournament.currentDay ?? days[0]
@@ -185,6 +188,8 @@ function TournamentApp({ data, admin }) {
       <main className="page">
         {syncBanner}
 
+        {tab !== 'Admin' && <Ticker events={tickerEvents} />}
+
         {tournament.isDemo && tab !== 'Admin' && (
           <p className="demo-notice">
             Demonstration only. These scores are sample values, not a live tournament.
@@ -262,6 +267,9 @@ function TournamentApp({ data, admin }) {
               onClearScores={() => scoring.clearAllScores(actor)}
               adminEmail={admin.email}
               onSignOut={admin.signOut}
+              notices={notices}
+              onPostNotice={data.postNotice}
+              onDeleteNotice={data.deleteNotice}
             />
           )}
         </section>

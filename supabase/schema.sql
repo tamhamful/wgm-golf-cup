@@ -8,7 +8,9 @@
 --   admins        emails of people allowed to administer the tournament
 --   tournament    one row holding the setup (teams, players, pairings,
 --                 settings) as a JSON document
---   match_scores  one row per match: the hole-by-hole results
+--   match_scores  one row per match: the hole-by-hole results and when
+--                 each hole was recorded
+--   ticker_notices  messages admins post to the ticker
 --
 -- Security:
 --   * Anyone can READ the tournament and scores (the leaderboard).
@@ -40,17 +42,34 @@ create table if not exists public.match_scores (
   updated_at timestamptz not null default now()
 );
 
+-- When each hole was recorded (same order as holes). Set by the database,
+-- used for the ticker ("2 min ago").
+alter table public.match_scores
+  add column if not exists hole_times timestamptz[] not null default '{}';
+
+-- Messages admins post to the ticker.
+create table if not exists public.ticker_notices (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  message text not null check (char_length(message) between 1 and 140)
+);
+
 
 -- ---------- Read access (Row Level Security) ----------
 
 alter table public.admins enable row level security;
 alter table public.tournament enable row level security;
 alter table public.match_scores enable row level security;
+alter table public.ticker_notices enable row level security;
 
-revoke all on public.admins, public.tournament, public.match_scores
+revoke all on public.admins, public.tournament, public.match_scores, public.ticker_notices
   from public, anon, authenticated;
-grant select on public.tournament, public.match_scores to anon, authenticated;
+grant select on public.tournament, public.match_scores, public.ticker_notices to anon, authenticated;
 grant select on public.admins to authenticated;
+
+drop policy if exists "Anyone can read notices" on public.ticker_notices;
+create policy "Anyone can read notices" on public.ticker_notices
+  for select to anon, authenticated using (true);
 
 drop policy if exists "Anyone can read the tournament" on public.tournament;
 create policy "Anyone can read the tournament" on public.tournament
@@ -132,10 +151,12 @@ declare
   hpm int;
   m jsonb;
   cur text[];
+  cur_times timestamptz[];
   admin boolean := public.is_admin();
   prog record;
   after_prog record;
   new_holes text[];
+  new_times timestamptz[];
 begin
   select setup into s from public.tournament where id = 1;
   hpm := coalesce((s ->> 'holesPerMatch')::int, 18);
@@ -153,7 +174,8 @@ begin
   end if;
 
   insert into public.match_scores (match_id) values (p_match_id) on conflict do nothing;
-  select holes into cur from public.match_scores where match_id = p_match_id for update;
+  select holes, hole_times into cur, cur_times
+    from public.match_scores where match_id = p_match_id for update;
 
   if coalesce(array_length(cur, 1), 0) <> p_expected_holes then
     raise exception 'Someone else has just updated this match. The latest scores are now showing, so please check and try again.';
@@ -171,17 +193,24 @@ begin
   end if;
 
   new_holes := coalesce(cur[1:prog.played], '{}');
+  new_times := coalesce(cur_times[1:prog.played], '{}');
   if p_hole <= prog.played then
+    -- Correction: change the result but keep when the hole was played.
     new_holes[p_hole] := p_result;
+    new_times[p_hole] := coalesce(new_times[p_hole], now());
   else
     new_holes := new_holes || p_result;
+    new_times := new_times || now();
   end if;
 
   -- A correction can end the match sooner: drop holes after the new finish.
   select * into after_prog from public.match_progress(new_holes, hpm);
   new_holes := coalesce(new_holes[1:after_prog.played], '{}');
+  new_times := coalesce(new_times[1:after_prog.played], '{}');
 
-  update public.match_scores set holes = new_holes, updated_at = now() where match_id = p_match_id;
+  update public.match_scores
+    set holes = new_holes, hole_times = new_times, updated_at = now()
+    where match_id = p_match_id;
   return new_holes;
 end;
 $$;
@@ -217,7 +246,11 @@ begin
   end if;
 
   new_holes := coalesce(cur[1:prog.played - 1], '{}');
-  update public.match_scores set holes = new_holes, updated_at = now() where match_id = p_match_id;
+  update public.match_scores
+    set holes = new_holes,
+        hole_times = coalesce(hole_times[1:prog.played - 1], '{}'),
+        updated_at = now()
+    where match_id = p_match_id;
   return new_holes;
 end;
 $$;
@@ -227,7 +260,8 @@ create or replace function public.reset_match(p_match_id text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception 'Only an admin can reset a match.'; end if;
-  update public.match_scores set holes = '{}', updated_at = now() where match_id = p_match_id;
+  update public.match_scores set holes = '{}', hole_times = '{}', updated_at = now()
+    where match_id = p_match_id;
 end;
 $$;
 
@@ -238,7 +272,9 @@ declare
   v int;
 begin
   if not public.is_admin() then raise exception 'Only an admin can clear the scores.'; end if;
-  update public.match_scores set holes = '{}', updated_at = now() where holes <> '{}';
+  update public.match_scores set holes = '{}', hole_times = '{}', updated_at = now()
+    where holes <> '{}' or hole_times <> '{}';
+  delete from public.ticker_notices where id is not null;
   update public.tournament
     set setup = jsonb_set(setup, '{isDemo}', 'false'), version = version + 1, updated_at = now()
     where id = 1
@@ -297,6 +333,28 @@ end;
 $$;
 
 
+-- ---------- Ticker notices (admins) ----------
+
+create or replace function public.post_notice(p_message text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Only an admin can post to the ticker.'; end if;
+  if char_length(trim(coalesce(p_message, ''))) not between 1 and 140 then
+    raise exception 'Notices must be between 1 and 140 characters.';
+  end if;
+  insert into public.ticker_notices (message) values (trim(p_message));
+end;
+$$;
+
+create or replace function public.delete_notice(p_id bigint)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Only an admin can remove notices.'; end if;
+  delete from public.ticker_notices where id = p_id;
+end;
+$$;
+
+
 -- ---------- Who may call the functions ----------
 
 revoke execute on function
@@ -307,6 +365,8 @@ revoke execute on function
   public.save_setup(jsonb, int),
   public.add_admin(text),
   public.remove_admin(text),
+  public.post_notice(text),
+  public.delete_notice(bigint),
   public.is_admin()
   from public, anon, authenticated;
 
@@ -321,15 +381,27 @@ grant execute on function
   public.clear_all_scores(),
   public.save_setup(jsonb, int),
   public.add_admin(text),
-  public.remove_admin(text)
+  public.remove_admin(text),
+  public.post_notice(text),
+  public.delete_notice(bigint)
   to authenticated;
 
 
 -- ---------- Live updates ----------
+-- One table at a time, so a table that is already set up doesn't stop the rest.
 
-do $$
-begin
-  alter publication supabase_realtime add table public.tournament, public.match_scores;
+do $$ begin
+  alter publication supabase_realtime add table public.tournament;
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter publication supabase_realtime add table public.match_scores;
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter publication supabase_realtime add table public.ticker_notices;
 exception when duplicate_object then null;
 end $$;
 
@@ -352,3 +424,15 @@ insert into public.match_scores (match_id, holes) values
   ('m3', '{HOME,HALVED,CHALLENGERS,HOME,HALVED,HOME,HALVED,CHALLENGERS,HALVED,HOME,HALVED,CHALLENGERS,HALVED,HALVED,HOME,HALVED,HALVED}'),
   ('m4', '{HOME,CHALLENGERS,HALVED,HALVED,CHALLENGERS,HOME,HALVED,HALVED}')
 on conflict (match_id) do nothing;
+
+-- Any recorded holes without a time (e.g. the demo scores above) get
+-- realistic times: about 12 minutes per hole, ending a few minutes ago.
+update public.match_scores
+set hole_times = array(
+  select now()
+         - ((cardinality(holes) - i) * interval '12 minutes')
+         - ((abs(hashtext(match_id)) % 15 + 1) * interval '1 minute')
+  from generate_series(1, cardinality(holes)) as i
+  order by i
+)
+where cardinality(hole_times) <> cardinality(holes);

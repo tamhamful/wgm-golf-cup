@@ -2,12 +2,22 @@ import { useState } from 'react'
 import AdminTeams from './AdminTeams.jsx'
 import AdminPairings from './AdminPairings.jsx'
 import AdminSettings from './AdminSettings.jsx'
+import AdminTicker from './AdminTicker.jsx'
 import DaySelector from '../DaySelector.jsx'
 import { setCurrentDay } from '../../lib/admin.js'
 
-const SECTIONS = ['Teams & players', 'Pairings', 'Settings']
+const SECTIONS = ['Teams & players', 'Pairings', 'Ticker', 'Settings']
 
-export default function AdminView({ tournament, apply, onClearScores, adminEmail, onSignOut }) {
+export default function AdminView({
+  tournament,
+  apply,
+  onClearScores,
+  adminEmail,
+  onSignOut,
+  notices,
+  onPostNotice,
+  onDeleteNotice,
+}) {
   const [section, setSection] = useState(SECTIONS[0])
   const [error, setError] = useState(null)
 
@@ -72,6 +82,9 @@ export default function AdminView({ tournament, apply, onClearScores, adminEmail
         <AdminTeams tournament={tournament} run={run} confirm={confirm} />
       )}
       {section === 'Pairings' && <AdminPairings tournament={tournament} run={run} />}
+      {section === 'Ticker' && (
+        <AdminTicker notices={notices} onPost={onPostNotice} onDelete={onDeleteNotice} />
+      )}
       {section === 'Settings' && (
         <AdminSettings
           tournament={tournament}

@@ -107,8 +107,9 @@ export default function AdminSettings({ tournament, run, signedInEmail, onClearS
       <section className="settings-block settings-danger">
         <h3>Clear all scores</h3>
         <p className="settings-help">
-          Removes every hole result in every match and the "demonstration" label, ready for the
-          real tournament. Teams, players and pairings are kept. This cannot be undone.
+          Removes every hole result in every match, all ticker notices and the "demonstration"
+          label, ready for the real tournament. Teams, players and pairings are kept. This cannot
+          be undone.
         </p>
         <button
           type="button"
