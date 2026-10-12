@@ -19,8 +19,10 @@ import AdminSignIn from './components/AdminSignIn.jsx'
 import Scorecard from './components/Scorecard.jsx'
 import Ticker from './components/Ticker.jsx'
 import { buildTickerEvents } from './lib/ticker.js'
+import { getPlayerRankings } from './lib/rankings.js'
+import RankingsView from './components/RankingsView.jsx'
 
-const TABS = ['Leaderboard', 'Matches', 'Players', 'Results']
+const TABS = ['Leaderboard', 'Matches', 'Players', 'Results', 'Rankings']
 
 function Message({ title, children }) {
   return (
@@ -252,6 +254,13 @@ function TournamentApp({ data, admin }) {
               teams={teams}
               playersById={playersById}
               holesPerMatch={holesPerMatch}
+            />
+          )}
+          {tab === 'Rankings' && (
+            <RankingsView
+              rankings={getPlayerRankings(tournament)}
+              teams={teams}
+              currentPlayerId={currentPlayerId}
             />
           )}
           {tab === 'Admin' && (

@@ -1813,3 +1813,105 @@ button.match-row {
     flex-wrap: wrap;
   }
 }
+
+/* ---------- Rankings ---------- */
+
+.rankings-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 76px 56px 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.rankings-head {
+  padding-top: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.rankings-row.is-you {
+  background: var(--surface-softer);
+}
+
+.rankings-rank {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankings-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rankings-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rankings-team {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.rankings-num {
+  text-align: right;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankings-head .rankings-num {
+  font-size: 11px;
+}
+
+.rankings-won {
+  color: var(--wgm-navy);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .rankings-row {
+    grid-template-columns: 28px minmax(0, 1fr) 52px 44px 32px;
+    gap: 6px;
+    padding: 9px 2px;
+  }
+
+  .rankings-head {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .rankings-head .rankings-num {
+    font-size: 10px;
+  }
+
+  .rankings-name {
+    font-size: 14px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+    padding-right: 2px;
+    padding-left: 2px;
+    font-size: 12px;
+  }
+}
