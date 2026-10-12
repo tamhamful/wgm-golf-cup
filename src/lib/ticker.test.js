@@ -78,14 +78,23 @@ test('overall lead, points needed and winning the Cup', () => {
   assert.ok(all.includes('Day 1 complete. Overall: Home Team 6 – 0 Challengers'))
 })
 
-test('projection swing', () => {
+test('projection swing needs a team at least a point clear', () => {
   let t = blank()
-  t = play(t, 'm1', 'H', 0) // Home projected ahead
-  t = play(t, 'm2', 'C', 1) // level
-  t = play(t, 'm3', 'C', 2) // Challengers projected ahead
+  t = play(t, 'm1', 'H', 0) // Home 1 – 0 projected: a point clear
+  t = play(t, 'm2', 'C', 1) // 1 – 1 level: not news
+  t = play(t, 'm3', 'C', 2) // Challengers 1 – 2
+  t = play(t, 'm4', '=', 3) // 1.5 – 2.5, still Challengers: not news again
   const all = texts(t)
-  assert.ok(all.includes('Projected score now level at 1 – 1'))
+  assert.ok(all.includes('Projected score swings to Home Team: 1 – 0'))
   assert.ok(all.includes('Projected score swings to Challengers: 1 – 2'))
+  assert.ok(!all.some((x) => x.includes('level')))
+  assert.equal(all.filter((x) => x.startsWith('Projected')).length, 2)
+})
+
+test('projected to win the Cup', () => {
+  let t = blank()
+  t.matches.slice(0, 10).forEach((m, i) => play(t, m.id, 'H', i)) // 10 live matches, Home 1 up
+  assert.ok(texts(t).includes('Home Team now projected to win the Cup: 10 – 0'))
 })
 
 test('newest first, and admin notices are included', () => {

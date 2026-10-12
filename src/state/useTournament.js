@@ -141,7 +141,7 @@ export function useTournament() {
       if (next === tournament) return null
       setTournament(next)
 
-      // Saves go one at a time so each uses the latest version number.
+      // Changes go one at a time so each uses the latest version number.
       saveQueue.current = saveQueue.current.then(async () => {
         const { data, error } = await supabase.rpc('save_setup', {
           p_setup: setupOf(next),
@@ -165,7 +165,9 @@ export function useTournament() {
       return error.message
     }
     setTournament(withHoleTimes(tournament, next))
-    supabase.rpc(rpcName, rpcArgs).then(({ data, error }) => {
+    // One at a time, in order, so quick taps can't arrive out of sequence.
+    saveQueue.current = saveQueue.current.then(async () => {
+      const { data, error } = await supabase.rpc(rpcName, rpcArgs)
       if (error) failed(error)
       else onSaved?.(data)
     })

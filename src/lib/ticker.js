@@ -12,6 +12,7 @@ import { formatPoints, getProjectedPoints, getTeamPoints } from './tournament.js
 const HOLE_STREAK = 3 // holes in a row before it's news
 const MATCH_STREAK = 3 // matches in a row before it's news
 const NEED_POINTS_WITHIN = 2 // "X need 1.5 more points" once this close
+const PROJECTION_GAP = 1 // a team must be projected this far ahead to be news
 
 const ordinal = (n) => {
   const suffixes = ['th', 'st', 'nd', 'rd']
@@ -137,13 +138,14 @@ function teamEvents(t) {
 
   let leader = null
   let projectedLeader = null
+  let projectedWinner = null
   let streakTeam = null
   let streak = 0
   const need = { HOME: null, CHALLENGERS: null }
   let cupWon = false
   const daysDone = new Set()
 
-  steps.forEach((step, index) => {
+  steps.forEach((step) => {
     const before = statusOf(matches.find((m) => m.id === step.matchId))
     count[step.matchId] = step.hole
     const after = statusOf(matches.find((m) => m.id === step.matchId))
@@ -228,21 +230,33 @@ function teamEvents(t) {
       leader = newLeader
     }
 
-    // Projection swings (who is projected to come out on top)
+    // Projection swings: only when a team moves at least a point clear in the
+    // projection (small flips back and forth aren't news).
     const projected = getProjectedPoints(current, holesPerMatch)
-    const newProjectedLeader = leaderOf(projected)
-    if (index > 0 && newProjectedLeader !== projectedLeader) {
+    const projectedText = `${formatPoints(projected.HOME)} – ${formatPoints(projected.CHALLENGERS)}`
+    const projectedTop = leaderOf(projected)
+    const projectedGap = Math.abs(projected.HOME - projected.CHALLENGERS)
+    if (projectedTop && projectedGap >= PROJECTION_GAP && projectedTop !== projectedLeader) {
+      projectedLeader = projectedTop
       events.push({
         ...at,
         id: `projection-${step.matchId}-${step.hole}`,
         kind: 'projection',
-        team: newProjectedLeader,
-        text: newProjectedLeader
-          ? `Projected score swings to ${teams[newProjectedLeader].name}: ${formatPoints(projected.HOME)} – ${formatPoints(projected.CHALLENGERS)}`
-          : `Projected score now level at ${formatPoints(projected.HOME)} – ${formatPoints(projected.CHALLENGERS)}`,
+        team: projectedTop,
+        text: `Projected score swings to ${teams[projectedTop].name}: ${projectedText}`,
       })
     }
-    projectedLeader = newProjectedLeader
+    // First time a team is projected to reach the winning total
+    if (!cupWon && projectedTop && projected[projectedTop] >= targetPoints && projectedWinner !== projectedTop) {
+      projectedWinner = projectedTop
+      events.push({
+        ...at,
+        id: `projected-win-${step.matchId}-${step.hole}`,
+        kind: 'projected-win',
+        team: projectedTop,
+        text: `${teams[projectedTop].name} now projected to win the Cup: ${projectedText}`,
+      })
+    }
   })
 
   return events

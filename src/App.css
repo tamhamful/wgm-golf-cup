@@ -1721,19 +1721,24 @@ button.match-row {
 
 .ticker-item {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   flex: 1;
   min-width: 0;
   animation: ticker-in 0.35s ease;
 }
 
+/* Up to two lines, so a phone shows the whole message. */
 .ticker-strip .ticker-text {
+  display: -webkit-box;
   overflow: hidden;
+  padding: 6px 0;
   font-size: 13px;
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .ticker-label {
@@ -1811,6 +1816,11 @@ button.match-row {
 }
 
 @media (max-width: 560px) {
+  /* Always two lines tall, so the page doesn't jump as messages change. */
+  .ticker-strip {
+    min-height: 50px;
+  }
+
   .ticker-strip .ticker-text {
     font-size: 12px;
   }
