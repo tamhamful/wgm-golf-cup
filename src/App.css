@@ -775,27 +775,11 @@
   font-size: 14px;
 }
 
-.who-teams {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-  margin-top: 20px;
-}
-
-.who-team-name {
-  padding: 10px 0 8px;
-  border-top: 3px solid var(--wgm-blue);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.who-team-challengers .who-team-name {
-  border-top-color: var(--wgm-green);
-}
-
 .who-list {
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin-top: 20px;
 }
 
 .who-player {
@@ -811,12 +795,8 @@
 }
 
 .who-player:hover {
-  border-color: var(--wgm-blue);
+  border-color: var(--wgm-navy);
   background: var(--surface-softer);
-}
-
-.who-team-challengers .who-player:hover {
-  border-color: var(--wgm-green);
 }
 
 /* ---------- Header user bar ---------- */
@@ -1172,7 +1152,7 @@
 }
 
 @media (max-width: 560px) {
-  .who-teams,
+  .who-list,
   .admin-teams,
   .admin-checklist {
     grid-template-columns: 1fr;

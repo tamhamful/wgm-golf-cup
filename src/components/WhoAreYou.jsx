@@ -1,4 +1,8 @@
-export default function WhoAreYou({ teams, players, onSelect }) {
+// One alphabetical list with no team information: players may not know
+// their teams until the sides have been picked.
+export default function WhoAreYou({ players, onSelect }) {
+  const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name))
+
   return (
     <div className="app">
       <header className="topbar">
@@ -14,28 +18,15 @@ export default function WhoAreYou({ teams, players, onSelect }) {
         <h1 className="who-title">Who are you?</h1>
         <p className="who-intro">Choose your name. This device will remember you.</p>
 
-        <div className="who-teams">
-          {['HOME', 'CHALLENGERS'].map((teamId) => (
-            <section key={teamId} className={`who-team who-team-${teamId.toLowerCase()}`}>
-              <h2 className="who-team-name">{teams[teamId].name}</h2>
-              <ul className="who-list">
-                {players
-                  .filter((p) => p.teamId === teamId)
-                  .map((player) => (
-                    <li key={player.id}>
-                      <button
-                        type="button"
-                        className="who-player"
-                        onClick={() => onSelect(player.id)}
-                      >
-                        {player.name}
-                      </button>
-                    </li>
-                  ))}
-              </ul>
-            </section>
+        <ul className="who-list">
+          {sorted.map((player) => (
+            <li key={player.id}>
+              <button type="button" className="who-player" onClick={() => onSelect(player.id)}>
+                {player.name}
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </main>
     </div>
   )

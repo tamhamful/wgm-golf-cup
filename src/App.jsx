@@ -33,7 +33,7 @@ function App() {
 
   const currentPlayer = playersById[currentPlayerId]
   if (!currentPlayer) {
-    return <WhoAreYou teams={teams} players={players} onSelect={setCurrentPlayerId} />
+    return <WhoAreYou players={players} onSelect={setCurrentPlayerId} />
   }
 
   // Not secure yet: anyone choosing an admin's name sees this tab.
