@@ -1,4 +1,4 @@
-import { describeMatch, formatPoints, STATUS } from '../lib/tournament.js'
+import { describeMatch, formatPoints, STATUS, UNASSIGNED_PLAYER } from '../lib/tournament.js'
 
 export default function ResultsView({ matches, teams, playersById, holesPerMatch }) {
   const completed = matches
@@ -12,8 +12,8 @@ export default function ResultsView({ matches, teams, playersById, holesPerMatch
   return (
     <ol className="results-list">
       {completed.map(({ match, view }) => {
-        const home = playersById[match.homePlayerId]
-        const challenger = playersById[match.challengerPlayerId]
+        const home = playersById[match.homePlayerId] ?? UNASSIGNED_PLAYER
+        const challenger = playersById[match.challengerPlayerId] ?? UNASSIGNED_PLAYER
         const outcome = view.side
           ? `${teams[view.side].name} win`
           : 'Match halved'

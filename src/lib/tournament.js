@@ -7,6 +7,9 @@ export const STATUS = {
   COMPLETE: 'COMPLETE',
 }
 
+// Shown in place of a player who hasn't been chosen for a match yet.
+export const UNASSIGNED_PLAYER = { id: null, name: 'TBC' }
+
 export const STATUS_LABEL = {
   NOT_STARTED: 'Not started',
   LIVE: 'Live',

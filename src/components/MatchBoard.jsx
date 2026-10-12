@@ -1,4 +1,4 @@
-import { describeMatch, STATUS } from '../lib/tournament.js'
+import { describeMatch, STATUS, UNASSIGNED_PLAYER } from '../lib/tournament.js'
 
 function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch }) {
   const view = describeMatch(match, holesPerMatch)
@@ -72,8 +72,8 @@ export default function MatchBoard({ matches, teams, playersById, holesPerMatch 
           <MatchRow
             key={match.id}
             match={match}
-            homePlayer={playersById[match.homePlayerId]}
-            challengerPlayer={playersById[match.challengerPlayerId]}
+            homePlayer={playersById[match.homePlayerId] ?? UNASSIGNED_PLAYER}
+            challengerPlayer={playersById[match.challengerPlayerId] ?? UNASSIGNED_PLAYER}
             holesPerMatch={holesPerMatch}
           />
         ))}

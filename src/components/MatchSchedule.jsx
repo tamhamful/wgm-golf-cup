@@ -1,12 +1,12 @@
-import { describeMatch, STATUS_LABEL } from '../lib/tournament.js'
+import { describeMatch, STATUS_LABEL, UNASSIGNED_PLAYER } from '../lib/tournament.js'
 
 export default function MatchSchedule({ matches, playersById, holesPerMatch }) {
   return (
     <ol className="schedule-list">
       {matches.map((match) => {
         const view = describeMatch(match, holesPerMatch)
-        const home = playersById[match.homePlayerId]
-        const challenger = playersById[match.challengerPlayerId]
+        const home = playersById[match.homePlayerId] ?? UNASSIGNED_PLAYER
+        const challenger = playersById[match.challengerPlayerId] ?? UNASSIGNED_PLAYER
 
         return (
           <li className="schedule-row" key={match.id}>

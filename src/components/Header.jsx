@@ -1,4 +1,4 @@
-export default function Header({ statusLabel }) {
+export default function Header({ statusLabel, currentPlayer, onChangePlayer }) {
   return (
     <header className="topbar">
       <div className="topbar-inner">
@@ -8,6 +8,16 @@ export default function Header({ statusLabel }) {
         </div>
         <span className="tournament-status">{statusLabel}</span>
       </div>
+      {currentPlayer && (
+        <div className="userbar">
+          <span>
+            Viewing as <strong>{currentPlayer.name}</strong>
+          </span>
+          <button type="button" className="link-button" onClick={onChangePlayer}>
+            Not you?
+          </button>
+        </div>
+      )}
     </header>
   )
 }
