@@ -57,7 +57,8 @@ export function renameTeam(t, teamId, name) {
 
 // ---------- Players ----------
 
-export function addPlayer(t, name, teamId) {
+// teamId can be null: the player exists but hasn't been picked for a team yet.
+export function addPlayer(t, name, teamId = null) {
   const clean = cleanName(name)
   if (t.players.some((p) => p.name.toLowerCase() === clean.toLowerCase())) {
     throw new Error(`There is already a player called ${clean}.`)
@@ -75,6 +76,8 @@ export function renamePlayer(t, playerId, name) {
   return { ...t, players: t.players.map((p) => (p.id === playerId ? { ...p, name: clean } : p)) }
 }
 
+// Moves a player to a team, or to Unassigned when teamId is null.
+// They are taken out of any pairings that haven't started.
 export function movePlayer(t, playerId, teamId) {
   const player = findPlayer(t, playerId)
   if (player.teamId === teamId) return t
@@ -112,7 +115,7 @@ export function setMatchPlayer(t, matchId, side, playerId) {
   if (playerId) {
     const player = findPlayer(t, playerId)
     if (player.teamId !== side) {
-      throw new Error(`${player.name} is not on the ${t.teams[side].name} team.`)
+      throw new Error(`${player.name} is not on ${t.teams[side].name}.`)
     }
     const clash = t.matches.find(
       (m) => m.id !== matchId && m.day === match.day && m[field] === playerId,

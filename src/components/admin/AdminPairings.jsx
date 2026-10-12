@@ -3,13 +3,12 @@ import { setGroupScorer, setMatchPlayer } from '../../lib/admin.js'
 import { STATUS, STATUS_LABEL } from '../../lib/tournament.js'
 import DaySelector from '../DaySelector.jsx'
 
-function PlayerSelect({ match, side, tournament, dayMatches, run }) {
+// Choosing a player who is already in another match that day swaps the two
+// players over (see setMatchPlayer in lib/admin.js).
+function PlayerSelect({ match, side, tournament, run }) {
   const field = side === 'HOME' ? 'homePlayerId' : 'challengerPlayerId'
   const teamPlayers = tournament.players.filter((p) => p.teamId === side)
   const locked = match.state.status !== STATUS.NOT_STARTED
-
-  // Shows which match each player is already in today, so swaps are obvious.
-  const playingIn = (playerId) => dayMatches.find((m) => m.id !== match.id && m[field] === playerId)
 
   return (
     <select
@@ -20,15 +19,11 @@ function PlayerSelect({ match, side, tournament, dayMatches, run }) {
       onChange={(e) => run(setMatchPlayer, match.id, side, e.target.value || null)}
     >
       <option value="">Choose player…</option>
-      {teamPlayers.map((p) => {
-        const other = playingIn(p.id)
-        return (
-          <option key={p.id} value={p.id}>
-            {p.name}
-            {other ? ` (swap from M${other.number})` : ''}
-          </option>
-        )
-      })}
+      {teamPlayers.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.name}
+        </option>
+      ))}
     </select>
   )
 }
@@ -86,9 +81,9 @@ export default function AdminPairings({ tournament, run }) {
               return (
                 <div key={match.id} className="pairing-row">
                   <span className="pairing-number">M{match.number}</span>
-                  <PlayerSelect match={match} side="HOME" tournament={tournament} dayMatches={dayMatches} run={run} />
+                  <PlayerSelect match={match} side="HOME" tournament={tournament} run={run} />
                   <span className="pairing-v">v</span>
-                  <PlayerSelect match={match} side="CHALLENGERS" tournament={tournament} dayMatches={dayMatches} run={run} />
+                  <PlayerSelect match={match} side="CHALLENGERS" tournament={tournament} run={run} />
                   {locked && (
                     <span className="pairing-locked">{STATUS_LABEL[match.state.status]} · locked</span>
                   )}

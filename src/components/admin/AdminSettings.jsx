@@ -21,7 +21,9 @@ export default function AdminSettings({ tournament, run, confirm, onReset }) {
                   onChange={(e) => run(setAdmin, player.id, e.target.checked)}
                 />
                 {player.name}
-                <span className="checklist-team">{teams[player.teamId].name}</span>
+                <span className="checklist-team">
+                  {player.teamId ? teams[player.teamId].name : 'Unassigned'}
+                </span>
               </label>
             </li>
           ))}

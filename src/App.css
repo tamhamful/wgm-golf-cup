@@ -1192,3 +1192,82 @@
     font-size: 14px;
   }
 }
+
+/* ---------- Unassigned players ---------- */
+
+.admin-unassigned {
+  margin-bottom: 24px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-softer);
+}
+
+.admin-unassigned .admin-team-count {
+  align-items: baseline;
+  margin-top: 0;
+}
+
+.admin-subheading {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.button-assign {
+  min-height: 36px;
+  max-width: 130px;
+  overflow: hidden;
+  padding: 0 10px;
+  background: var(--surface);
+  font-size: 13px;
+  text-overflow: ellipsis;
+}
+
+.button-assign-home {
+  border-color: var(--wgm-blue);
+  color: #1b7396;
+}
+
+.button-assign-challengers {
+  border-color: var(--wgm-green);
+  color: var(--wgm-green);
+}
+
+.team-select {
+  width: auto;
+  max-width: 130px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.players-team-unassigned {
+  margin-top: 24px;
+}
+
+.players-team-unassigned .players-team-name {
+  border-top-color: var(--line);
+}
+
+@media (max-width: 560px) {
+  .admin-unassigned .admin-player {
+    flex-wrap: wrap;
+  }
+
+  .admin-unassigned .admin-player .text-input {
+    flex-basis: 100%;
+  }
+
+  .button-assign {
+    flex: 1;
+    max-width: none;
+  }
+
+  .team-select {
+    max-width: 110px;
+  }
+
+  /* No room on phones; admins are listed in Admin → Settings. */
+  .admin-tag {
+    display: none;
+  }
+}
