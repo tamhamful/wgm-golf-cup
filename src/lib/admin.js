@@ -13,17 +13,6 @@ function findPlayer(t, playerId) {
   return player
 }
 
-// If a group's scorer is no longer playing in that group, clear the scorer.
-function tidyScorers(t) {
-  const groups = t.groups.map((group) => {
-    const inGroup = t.matches
-      .filter((m) => m.groupId === group.id)
-      .flatMap(playersInMatch)
-    return inGroup.includes(group.scorerId) ? group : { ...group, scorerId: null }
-  })
-  return { ...t, groups }
-}
-
 // Takes a player out of every match that hasn't started. Refuses if they are
 // in a match that has started, so live scores are never disturbed.
 function unassignPlayer(t, playerId, actionText) {
@@ -39,7 +28,7 @@ function unassignPlayer(t, playerId, actionText) {
     homePlayerId: m.homePlayerId === playerId ? null : m.homePlayerId,
     challengerPlayerId: m.challengerPlayerId === playerId ? null : m.challengerPlayerId,
   }))
-  return tidyScorers({ ...t, matches })
+  return { ...t, matches }
 }
 
 function cleanName(name) {
@@ -130,14 +119,7 @@ export function setMatchPlayer(t, matchId, side, playerId) {
   }
 
   matches = matches.map((m) => (m.id === matchId ? { ...m, [field]: playerId || null } : m))
-  return tidyScorers({ ...t, matches })
-}
-
-export function setGroupScorer(t, groupId, playerId) {
-  return {
-    ...t,
-    groups: t.groups.map((g) => (g.id === groupId ? { ...g, scorerId: playerId || null } : g)),
-  }
+  return { ...t, matches }
 }
 
 // ---------- Settings ----------

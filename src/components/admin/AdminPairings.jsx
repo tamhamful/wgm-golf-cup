@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { setGroupScorer, setMatchPlayer } from '../../lib/admin.js'
+import { setMatchPlayer } from '../../lib/admin.js'
 import { STATUS, STATUS_LABEL } from '../../lib/tournament.js'
 import { getMatchStatus } from '../../lib/scoring.js'
 import DaySelector from '../DaySelector.jsx'
@@ -30,51 +30,31 @@ function PlayerSelect({ match, side, tournament, run }) {
 }
 
 export default function AdminPairings({ tournament, run }) {
-  const { days, groups, matches, players } = tournament
+  const { days, groups, matches } = tournament
   const [day, setDay] = useState(days[0])
-  const playerName = (id) => players.find((p) => p.id === id)?.name
 
   const dayMatches = matches.filter((m) => m.day === day)
   const dayGroups = groups.filter((g) => g.day === day)
   const incomplete = dayMatches.filter((m) => !m.homePlayerId || !m.challengerPlayerId).length
-  const noScorer = dayGroups.filter((g) => !g.scorerId).length
 
   return (
     <div className="admin-pairings">
       <DaySelector days={days} activeDay={day} onChange={setDay} />
 
-      {(incomplete > 0 || noScorer > 0) && (
+      {incomplete > 0 && (
         <p className="warning-box">
-          {incomplete > 0 && `${incomplete} match${incomplete === 1 ? '' : 'es'} still need players. `}
-          {noScorer > 0 && `${noScorer} group${noScorer === 1 ? '' : 's'} need a scorer.`}
+          {incomplete} match{incomplete === 1 ? '' : 'es'} still need players.
         </p>
       )}
 
       {dayGroups.map((group) => {
         const groupMatches = dayMatches.filter((m) => m.groupId === group.id)
-        const groupPlayerIds = groupMatches
-          .flatMap((m) => [m.homePlayerId, m.challengerPlayerId])
-          .filter(Boolean)
 
         return (
           <section key={group.id} className="pairing-group">
             <div className="pairing-group-header">
               <h3>Group {group.number}</h3>
-              <label className="scorer-field">
-                <span>Scorer</span>
-                <select
-                  className={`select-input ${group.scorerId ? '' : 'is-empty'}`}
-                  value={group.scorerId ?? ''}
-                  onChange={(e) => run(setGroupScorer, group.id, e.target.value || null)}
-                >
-                  <option value="">Choose scorer…</option>
-                  {groupPlayerIds.map((id) => (
-                    <option key={id} value={id}>
-                      {playerName(id)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <span className="pairing-group-note">Any of these four players can enter scores</span>
             </div>
 
             {groupMatches.map((match) => {

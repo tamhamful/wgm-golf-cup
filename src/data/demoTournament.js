@@ -59,14 +59,10 @@ const matches = fixtures.map(([day, homePlayerId, challengerPlayerId, holeCodes]
   }
 })
 
-// Each group of four players (two matches) has one designated scorer.
-// By default it's the Home player in the group's first match.
+// Each group of four players plays two matches together. Any of the four
+// can enter scores for both matches (see canScoreMatch in lib/scoring.js).
 const groups = [1, 2, 3].flatMap((day) =>
-  [1, 2, 3].map((number) => {
-    const id = `d${day}g${number}`
-    const firstMatch = matches.find((m) => m.groupId === id)
-    return { id, day, number, scorerId: firstMatch.homePlayerId }
-  }),
+  [1, 2, 3].map((number) => ({ id: `d${day}g${number}`, day, number })),
 )
 
 export function createDemoTournament() {

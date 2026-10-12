@@ -1063,18 +1063,9 @@
   font-weight: 700;
 }
 
-.scorer-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.pairing-group-note {
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.scorer-field .select-input {
-  width: auto;
-  min-width: 170px;
+  font-size: 12px;
 }
 
 .pairing-row {
@@ -1181,15 +1172,6 @@
 
   .pairing-group-header {
     flex-wrap: wrap;
-  }
-
-  .scorer-field {
-    width: 100%;
-  }
-
-  .scorer-field .select-input {
-    flex: 1;
-    min-width: 0;
   }
 
   .pairing-row {
