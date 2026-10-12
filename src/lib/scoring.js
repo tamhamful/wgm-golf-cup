@@ -84,11 +84,15 @@ export function getGroupPlayerIds(t, groupId) {
     .filter(Boolean)
 }
 
+// "actor" is whoever is making the change: { playerId, isAdmin }.
+// playerId is the name picked on this device; isAdmin is only true for a
+// signed-in admin. The database repeats these checks (supabase/schema.sql).
+
 // The four players in a match's group, plus admins, may score it.
-export function canScoreMatch(t, match, playerId) {
-  if (!playerId) return false
-  if (t.adminIds.includes(playerId)) return true
-  return getGroupPlayerIds(t, match.groupId).includes(playerId)
+export function canScoreMatch(t, match, actor) {
+  if (actor.isAdmin) return true
+  if (!actor.playerId) return false
+  return getGroupPlayerIds(t, match.groupId).includes(actor.playerId)
 }
 
 // ---------- Changing scores ----------
@@ -105,16 +109,16 @@ function withHoles(t, matchId, holes) {
   return { ...t, matches: t.matches.map((m) => (m.id === matchId ? { ...m, holes } : m)) }
 }
 
-function checkCanScore(t, match, actorId) {
-  if (!canScoreMatch(t, match, actorId)) {
+function checkCanScore(t, match, actor) {
+  if (!canScoreMatch(t, match, actor)) {
     throw new Error('Only the players in this group, or an admin, can enter scores for this match.')
   }
 }
 
 // Records (or corrects) the result of one hole.
-export function recordHole(t, matchId, holeNumber, result, actorId) {
+export function recordHole(t, matchId, holeNumber, result, actor) {
   const match = getMatch(t, matchId)
-  checkCanScore(t, match, actorId)
+  checkCanScore(t, match, actor)
   if (!match.homePlayerId || !match.challengerPlayerId) {
     throw new Error('Both players must be chosen before scores can be entered.')
   }
@@ -123,7 +127,7 @@ export function recordHole(t, matchId, holeNumber, result, actorId) {
   }
 
   const state = computeMatchState(match.holes, t.holesPerMatch)
-  const isAdmin = t.adminIds.includes(actorId)
+  const { isAdmin } = actor
 
   if (!Number.isInteger(holeNumber) || holeNumber < 1 || holeNumber > t.holesPerMatch) {
     throw new Error('That hole number is not valid.')
@@ -147,20 +151,27 @@ export function recordHole(t, matchId, holeNumber, result, actorId) {
 }
 
 // Removes the most recent hole result.
-export function undoLastHole(t, matchId, actorId) {
+export function undoLastHole(t, matchId, actor) {
   const match = getMatch(t, matchId)
-  checkCanScore(t, match, actorId)
+  checkCanScore(t, match, actor)
   const state = computeMatchState(match.holes, t.holesPerMatch)
   if (state.holesPlayed === 0) throw new Error('No holes have been entered yet.')
-  if (state.status === STATUS.COMPLETE && !t.adminIds.includes(actorId)) {
+  if (state.status === STATUS.COMPLETE && !actor.isAdmin) {
     throw new Error('This match is finished. Only an admin can correct it.')
   }
   return withHoles(t, matchId, match.holes.slice(0, state.holesPlayed - 1))
 }
 
 // Clears every hole in a match. Admins only.
-export function resetMatch(t, matchId, actorId) {
+export function resetMatch(t, matchId, actor) {
   getMatch(t, matchId)
-  if (!t.adminIds.includes(actorId)) throw new Error('Only an admin can reset a match.')
+  if (!actor.isAdmin) throw new Error('Only an admin can reset a match.')
   return withHoles(t, matchId, [])
+}
+
+// Clears every score in the tournament (teams, players and pairings stay)
+// and removes the "demonstration" label. Admins only.
+export function clearAllScores(t, actor) {
+  if (!actor.isAdmin) throw new Error('Only an admin can clear the scores.')
+  return { ...t, isDemo: false, matches: t.matches.map((m) => ({ ...m, holes: [] })) }
 }

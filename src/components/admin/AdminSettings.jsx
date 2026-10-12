@@ -1,33 +1,87 @@
-import { setAdmin, setTargetPoints } from '../../lib/admin.js'
+import { useEffect, useState } from 'react'
+import { setTargetPoints } from '../../lib/admin.js'
+import { addAdmin, listAdmins, removeAdmin } from '../../state/adminApi.js'
 
-export default function AdminSettings({ tournament, run, confirm, onReset }) {
-  const { players, adminIds, teams, targetPoints, matches } = tournament
+function AdminList({ signedInEmail }) {
+  const [admins, setAdmins] = useState([])
+  const [newEmail, setNewEmail] = useState('')
+  const [message, setMessage] = useState(null)
+
+  const refresh = () =>
+    listAdmins()
+      .then(setAdmins)
+      .catch((error) => setMessage(error.message))
+
+  useEffect(() => {
+    refresh()
+  }, [])
+
+  const add = async (e) => {
+    e.preventDefault()
+    const error = await addAdmin(newEmail)
+    setMessage(error)
+    if (!error) {
+      setNewEmail('')
+      refresh()
+    }
+  }
+
+  const remove = async (email) => {
+    if (!window.confirm(`Remove ${email} as an admin?`)) return
+    const error = await removeAdmin(email)
+    setMessage(error)
+    if (!error) refresh()
+  }
+
+  return (
+    <>
+      {message && <p className="error-box">{message}</p>}
+      <ul className="admin-email-list">
+        {admins.map((email) => (
+          <li key={email}>
+            <span>
+              {email}
+              {email === signedInEmail?.toLowerCase() && <span className="checklist-team"> (you)</span>}
+            </span>
+            <button
+              type="button"
+              className="button button-quiet button-danger-text"
+              onClick={() => remove(email)}
+            >
+              Remove
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form className="add-player" onSubmit={add}>
+        <input
+          className="text-input"
+          type="email"
+          placeholder="Email address"
+          aria-label="New admin email address"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+        />
+        <button type="submit" className="button button-secondary" disabled={!newEmail.trim()}>
+          Add admin
+        </button>
+      </form>
+    </>
+  )
+}
+
+export default function AdminSettings({ tournament, run, signedInEmail, onClearScores }) {
+  const { targetPoints, matches } = tournament
 
   return (
     <div className="admin-settings">
       <section className="settings-block">
         <h3>Admins</h3>
         <p className="settings-help">
-          Admins can change teams, pairings and settings, and will be able to enter or correct any
-          score.
+          Admins sign in with an emailed link. They can change teams, pairings and settings, and
+          enter or correct any score.
         </p>
-        <ul className="admin-checklist">
-          {players.map((player) => (
-            <li key={player.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={adminIds.includes(player.id)}
-                  onChange={(e) => run(setAdmin, player.id, e.target.checked)}
-                />
-                {player.name}
-                <span className="checklist-team">
-                  {player.teamId ? teams[player.teamId].name : 'Unassigned'}
-                </span>
-              </label>
-            </li>
-          ))}
-        </ul>
+        <AdminList signedInEmail={signedInEmail} />
       </section>
 
       <section className="settings-block">
@@ -51,21 +105,21 @@ export default function AdminSettings({ tournament, run, confirm, onReset }) {
       </section>
 
       <section className="settings-block settings-danger">
-        <h3>Reset tournament</h3>
+        <h3>Clear all scores</h3>
         <p className="settings-help">
-          Puts every team, player, pairing and score back to the original demonstration data.
-          This cannot be undone.
+          Removes every hole result in every match and the "demonstration" label, ready for the
+          real tournament. Teams, players and pairings are kept. This cannot be undone.
         </p>
         <button
           type="button"
           className="button button-danger"
           onClick={() => {
-            if (confirm('Reset the whole tournament to the demonstration data? This cannot be undone.')) {
-              onReset()
+            if (window.confirm('Clear every score in the tournament? This cannot be undone.')) {
+              onClearScores()
             }
           }}
         >
-          Reset tournament
+          Clear all scores
         </button>
       </section>
     </div>

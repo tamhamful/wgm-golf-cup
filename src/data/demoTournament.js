@@ -79,7 +79,6 @@ export function createDemoTournament() {
       CHALLENGERS: { id: 'CHALLENGERS', name: 'Challengers' },
     },
     players,
-    adminIds: ['h1'],
     groups,
     matches,
   })

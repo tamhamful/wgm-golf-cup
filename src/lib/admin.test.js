@@ -41,7 +41,6 @@ test('a player can only be paired for their own team', () => {
 test('removing players', () => {
   const t = createDemoTournament()
   assert.throws(() => A.removePlayer(t, 'h2'), /already started/) // in live match
-  assert.throws(() => A.removePlayer(t, 'h1'), /admin/)
   const after = A.removePlayer(t, 'h6') // only in unstarted matches
   assert.equal(matchOf(after, 'm6').homePlayerId, null)
   assert.ok(!after.players.some((p) => p.id === 'h6'))
@@ -62,14 +61,6 @@ test('moving a player to unassigned clears their unstarted pairings', () => {
   const t = A.movePlayer(createDemoTournament(), 'h5', null)
   assert.equal(playerOf(t, 'h5').teamId, null)
   assert.ok(!t.matches.some((m) => m.homePlayerId === 'h5'))
-})
-
-test('there must always be at least one admin', () => {
-  let t = createDemoTournament()
-  assert.throws(() => A.setAdmin(t, 'h1', false), /only admin/)
-  t = A.setAdmin(t, 'c1', true)
-  t = A.setAdmin(t, 'h1', false)
-  assert.deepEqual(t.adminIds, ['c1'])
 })
 
 test('admin sets the current day', () => {

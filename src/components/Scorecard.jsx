@@ -1,12 +1,5 @@
 import { useState } from 'react'
-import {
-  computeMatchState,
-  HOLE_RESULT,
-  recordHole,
-  resetMatch,
-  STATUS,
-  undoLastHole,
-} from '../lib/scoring.js'
+import { computeMatchState, HOLE_RESULT, STATUS } from '../lib/scoring.js'
 
 const initials = (name) =>
   name
@@ -49,10 +42,12 @@ function StatusLine({ state, home, challenger }) {
   )
 }
 
-export default function Scorecard({ tournament, match, home, challenger, currentPlayerId, apply, onBack }) {
-  const { holesPerMatch, adminIds, teams } = tournament
+// scoring: the score-changing actions from useTournament
+// actor: who is scoring, { playerId, isAdmin }
+export default function Scorecard({ tournament, match, home, challenger, actor, scoring, onBack }) {
+  const { holesPerMatch, teams } = tournament
   const state = computeMatchState(match.holes, holesPerMatch)
-  const isAdmin = adminIds.includes(currentPlayerId)
+  const { isAdmin } = actor
   const isComplete = state.status === STATUS.COMPLETE
   const canEdit = !isComplete || isAdmin
 
@@ -76,19 +71,19 @@ export default function Scorecard({ tournament, match, home, challenger, current
         note = `Hole ${activeHole} changed.`
       }
     }
-    const error = apply(recordHole, match.id, activeHole, result, currentPlayerId)
+    const error = scoring.recordHole(match.id, activeHole, result, actor)
     setMessage(error ? { type: 'error', text: error } : note && { type: 'info', text: note })
     if (!error) setSelectedHole(null)
   }
 
   const undo = () => {
-    const error = apply(undoLastHole, match.id, currentPlayerId)
+    const error = scoring.undoLastHole(match.id, actor)
     setMessage(error ? { type: 'error', text: error } : null)
   }
 
   const reset = () => {
     if (!window.confirm(`Clear every hole in Match ${match.number}? This cannot be undone.`)) return
-    const error = apply(resetMatch, match.id, currentPlayerId)
+    const error = scoring.resetMatch(match.id, actor)
     setMessage(error ? { type: 'error', text: error } : { type: 'info', text: 'Match reset.' })
     setSelectedHole(null)
   }

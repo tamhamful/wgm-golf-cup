@@ -1,7 +1,14 @@
 // Tests for the match-play scoring engine. Run with: npm test
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeMatchState, recordHole, undoLastHole, resetMatch, canScoreMatch } from './scoring.js'
+import {
+  canScoreMatch,
+  clearAllScores,
+  computeMatchState,
+  recordHole,
+  resetMatch,
+  undoLastHole,
+} from './scoring.js'
 import { createDemoTournament } from '../data/demoTournament.js'
 
 // Shorthand: H = Home won, C = Challenger won, = = halved
@@ -84,34 +91,41 @@ test('holes recorded after the match ended are ignored', () => {
 
 const demo = () => createDemoTournament()
 const matchOf = (t, id) => t.matches.find((m) => m.id === id)
+const player = (playerId) => ({ playerId, isAdmin: false })
+const ADMIN = { playerId: 'h1', isAdmin: true }
 
 test('group member can record the next hole', () => {
   // m5 is David Campbell (h5) v Gordon Reid (c5), group d1g3 with m6
-  const t = recordHole(demo(), 'm5', 1, 'HOME', 'c6') // Alan Murray is in the same group
+  const t = recordHole(demo(), 'm5', 1, 'HOME', player('c6')) // Alan Murray is in the same group
   assert.deepEqual(matchOf(t, 'm5').holes, ['HOME'])
 })
 
 test('player from another group cannot score', () => {
-  assert.throws(() => recordHole(demo(), 'm5', 1, 'HOME', 'h2'), /Only the players in this group/)
-  assert.equal(canScoreMatch(demo(), matchOf(demo(), 'm5'), 'h2'), false)
+  assert.throws(() => recordHole(demo(), 'm5', 1, 'HOME', player('h2')), /Only the players in this group/)
+  assert.equal(canScoreMatch(demo(), matchOf(demo(), 'm5'), player('h2')), false)
 })
 
-test('admin can score any match', () => {
-  assert.equal(canScoreMatch(demo(), matchOf(demo(), 'm5'), 'h1'), true)
+test('picking a name is not enough to be an admin', () => {
+  // h1 (Tom Hamilton) without the admin sign-in is just a player
+  assert.equal(canScoreMatch(demo(), matchOf(demo(), 'm5'), player('h1')), false)
+})
+
+test('signed-in admin can score any match', () => {
+  assert.equal(canScoreMatch(demo(), matchOf(demo(), 'm5'), ADMIN), true)
 })
 
 test('cannot skip a hole', () => {
-  assert.throws(() => recordHole(demo(), 'm5', 2, 'HOME', 'h5'), /Enter hole 1 first/)
+  assert.throws(() => recordHole(demo(), 'm5', 2, 'HOME', player('h5')), /Enter hole 1 first/)
 })
 
 test('a finished match will not accept another hole', () => {
-  assert.throws(() => recordHole(demo(), 'm3', 18, 'HOME', 'h1'), /finished/)
+  assert.throws(() => recordHole(demo(), 'm3', 18, 'HOME', ADMIN), /finished/)
 })
 
 test('only an admin can correct a finished match', () => {
   // m3 David Kelly (h3) won 2&1; Bobby Brown (c3) is in that group but not an admin
-  assert.throws(() => recordHole(demo(), 'm3', 1, 'CHALLENGERS', 'c3'), /Only an admin/)
-  const t = recordHole(demo(), 'm3', 1, 'CHALLENGERS', 'h1')
+  assert.throws(() => recordHole(demo(), 'm3', 1, 'CHALLENGERS', player('c3')), /Only an admin/)
+  const t = recordHole(demo(), 'm3', 1, 'CHALLENGERS', ADMIN)
   const s = computeMatchState(matchOf(t, 'm3').holes)
   assert.equal(s.status, 'LIVE') // now all square after 17, so hole 18 is needed
   assert.equal(s.margin, 0)
@@ -119,7 +133,7 @@ test('only an admin can correct a finished match', () => {
 
 test('correcting an earlier hole recalculates the position', () => {
   // m1: Tom Hamilton 1 UP through 14. Change hole 2 (a Challengers win) to Home.
-  const t = recordHole(demo(), 'm1', 2, 'HOME', 'c1')
+  const t = recordHole(demo(), 'm1', 2, 'HOME', player('c1'))
   const s = computeMatchState(matchOf(t, 'm1').holes)
   assert.equal(s.leader, 'HOME')
   assert.equal(s.margin, 3)
@@ -128,26 +142,33 @@ test('correcting an earlier hole recalculates the position', () => {
 
 test('a correction that ends the match sooner drops later holes', () => {
   let t = demo()
-  for (let hole = 1; hole <= 9; hole++) t = recordHole(t, 'm5', hole, 'HOME', 'h1')
-  t = recordHole(t, 'm5', 10, 'CHALLENGERS', 'h1') // 8 up after 10, still live
-  t = recordHole(t, 'm5', 10, 'HOME', 'h1') // correction: now 10 up after 10 -> 10&8
+  for (let hole = 1; hole <= 9; hole++) t = recordHole(t, 'm5', hole, 'HOME', ADMIN)
+  t = recordHole(t, 'm5', 10, 'CHALLENGERS', ADMIN) // 8 up after 10, still live
+  t = recordHole(t, 'm5', 10, 'HOME', ADMIN) // correction: now 10 up after 10 -> 10&8
   const m = matchOf(t, 'm5')
   assert.equal(m.holes.length, 10)
   assert.equal(computeMatchState(m.holes).result, '10&8')
 })
 
 test('undo removes the last hole', () => {
-  const t = undoLastHole(demo(), 'm4', 'h4')
+  const t = undoLastHole(demo(), 'm4', player('h4'))
   assert.equal(matchOf(t, 'm4').holes.length, 7)
 })
 
 test('only an admin can reset a match', () => {
-  assert.throws(() => resetMatch(demo(), 'm1', 'c1'), /Only an admin/)
-  assert.deepEqual(matchOf(resetMatch(demo(), 'm1', 'h1'), 'm1').holes, [])
+  assert.throws(() => resetMatch(demo(), 'm1', player('c1')), /Only an admin/)
+  assert.deepEqual(matchOf(resetMatch(demo(), 'm1', ADMIN), 'm1').holes, [])
+})
+
+test('only an admin can clear all scores; it removes the demo label', () => {
+  assert.throws(() => clearAllScores(demo(), player('h1')), /Only an admin/)
+  const t = clearAllScores(demo(), ADMIN)
+  assert.ok(t.matches.every((m) => m.holes.length === 0))
+  assert.equal(t.isDemo, false)
 })
 
 test('cannot score a match with a player missing', () => {
   const t = demo()
   t.matches.find((m) => m.id === 'm5').homePlayerId = null
-  assert.throws(() => recordHole(t, 'm5', 1, 'HOME', 'h1'), /Both players/)
+  assert.throws(() => recordHole(t, 'm5', 1, 'HOME', ADMIN), /Both players/)
 })

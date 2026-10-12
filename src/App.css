@@ -1028,14 +1028,6 @@
   min-width: 0;
 }
 
-.admin-tag {
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--surface-soft);
-  color: var(--wgm-blue-2);
-  font-size: 11px;
-  font-weight: 700;
-}
 
 .add-player {
   display: flex;
@@ -1259,11 +1251,6 @@
 
   .team-select {
     max-width: 110px;
-  }
-
-  /* No room on phones; admins are listed in Admin → Settings. */
-  .admin-tag {
-    display: none;
   }
 }
 
@@ -1616,4 +1603,67 @@ button.match-row {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* ---------- Online: sign-in, messages, admin list ---------- */
+
+.message-page {
+  padding-top: 24px;
+}
+
+.retry-button {
+  margin-top: 16px;
+}
+
+.page-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.admin-signin {
+  max-width: 480px;
+  padding-top: 20px;
+}
+
+.admin-signin h2 {
+  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.admin-signin-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-signin-back {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.admin-signed-in {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.admin-email-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.sync-error {
+  margin-top: 12px;
 }

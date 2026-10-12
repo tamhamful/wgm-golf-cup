@@ -6,7 +6,7 @@ export default function Header({ statusLabel, currentPlayer, onChangePlayer }) {
           <span className="brand-mark">WGM</span>
           <span className="brand-title">Golf Cup</span>
         </div>
-        <span className="tournament-status">{statusLabel}</span>
+        {statusLabel && <span className="tournament-status">{statusLabel}</span>}
       </div>
       {currentPlayer && (
         <div className="userbar">

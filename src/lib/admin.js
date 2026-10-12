@@ -77,10 +77,6 @@ export function movePlayer(t, playerId, teamId) {
 }
 
 export function removePlayer(t, playerId) {
-  const player = findPlayer(t, playerId)
-  if (t.adminIds.includes(playerId)) {
-    throw new Error(`${player.name} is an admin. Remove their admin role first.`)
-  }
   const next = unassignPlayer(t, playerId, 'remove')
   return { ...next, players: next.players.filter((p) => p.id !== playerId) }
 }
@@ -123,18 +119,6 @@ export function setMatchPlayer(t, matchId, side, playerId) {
 }
 
 // ---------- Settings ----------
-
-export function setAdmin(t, playerId, isAdmin) {
-  const player = findPlayer(t, playerId)
-  if (isAdmin) {
-    if (t.adminIds.includes(playerId)) return t
-    return { ...t, adminIds: [...t.adminIds, playerId] }
-  }
-  if (t.adminIds.length === 1 && t.adminIds[0] === playerId) {
-    throw new Error(`${player.name} is the only admin. Add another admin first.`)
-  }
-  return { ...t, adminIds: t.adminIds.filter((id) => id !== playerId) }
-}
 
 // The day everyone's leaderboard opens on.
 export function setCurrentDay(t, day) {

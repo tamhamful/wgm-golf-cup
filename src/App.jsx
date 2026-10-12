@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import './App.css'
 import { getProjectedPoints, getTeamPoints, getTournamentStatus } from './lib/tournament.js'
 import { canScoreMatch } from './lib/scoring.js'
+import { isSupabaseConfigured } from './lib/supabaseClient.js'
 import { useTournament } from './state/useTournament.js'
+import { useAdminSession } from './state/useAdminSession.js'
 import { useCurrentPlayer } from './state/useCurrentPlayer.js'
 import Header from './components/Header.jsx'
 import Scoreboard from './components/Scoreboard.jsx'
@@ -13,13 +15,60 @@ import PlayersView from './components/PlayersView.jsx'
 import ResultsView from './components/ResultsView.jsx'
 import WhoAreYou from './components/WhoAreYou.jsx'
 import AdminView from './components/admin/AdminView.jsx'
+import AdminSignIn from './components/AdminSignIn.jsx'
 import Scorecard from './components/Scorecard.jsx'
 
 const TABS = ['Leaderboard', 'Matches', 'Players', 'Results']
 
+function Message({ title, children }) {
+  return (
+    <div className="app">
+      <Header />
+      <main className="page message-page">
+        <h1 className="who-title">{title}</h1>
+        {children}
+      </main>
+    </div>
+  )
+}
+
 function App() {
-  const { tournament, apply, reset } = useTournament()
-  const { teams, players, matches, days, targetPoints, holesPerMatch, adminIds } = tournament
+  if (!isSupabaseConfigured) {
+    return (
+      <Message title="Not connected">
+        <p className="who-intro">
+          The database connection settings are missing (VITE_SUPABASE_URL and
+          VITE_SUPABASE_PUBLISHABLE_KEY).
+        </p>
+      </Message>
+    )
+  }
+  return <ConnectedApp />
+}
+
+function ConnectedApp() {
+  const data = useTournament()
+  const admin = useAdminSession()
+
+  if (!data.tournament) {
+    return data.loadError ? (
+      <Message title="Can't load the tournament">
+        <p className="who-intro">{data.loadError}</p>
+        <button type="button" className="button button-secondary retry-button" onClick={data.reload}>
+          Try again
+        </button>
+      </Message>
+    ) : (
+      <Message title="Loading…" />
+    )
+  }
+
+  return <TournamentApp data={data} admin={admin} />
+}
+
+function TournamentApp({ data, admin }) {
+  const { tournament, apply, scoring, syncError, dismissSyncError } = data
+  const { teams, players, matches, days, targetPoints, holesPerMatch } = tournament
   const [currentPlayerId, setCurrentPlayerId] = useCurrentPlayer()
 
   const playersById = useMemo(
@@ -33,6 +82,7 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('Leaderboard')
   const [scoringMatchId, setScoringMatchId] = useState(null)
+  const [showSignIn, setShowSignIn] = useState(false)
 
   // The leaderboard shows the admin's current day. A viewer can tap another
   // day to look at it, but when the admin changes the day everyone follows.
@@ -50,10 +100,10 @@ function App() {
     return <WhoAreYou players={players} onSelect={setCurrentPlayerId} />
   }
 
-  // Not secure yet: anyone choosing an admin's name sees this tab.
-  // Real sign-in for admins comes with the online database (Stage 6).
-  const isAdmin = adminIds.includes(currentPlayerId)
-  const tabs = isAdmin ? [...TABS, 'Admin'] : TABS
+  // Admin status comes from the email sign-in, checked by the database.
+  // Players are identified by the name picked on this device.
+  const actor = { playerId: currentPlayerId, isAdmin: admin.isAdmin }
+  const tabs = admin.isAdmin ? [...TABS, 'Admin'] : TABS
   const tab = tabs.includes(activeTab) ? activeTab : 'Leaderboard'
 
   const dayMatches = matches.filter((m) => m.day === activeDay)
@@ -61,31 +111,61 @@ function App() {
 
   // Scoring: only the four players in a match's group, or an admin, can open it.
   const canOpenMatch = (match) =>
-    Boolean(match.homePlayerId && match.challengerPlayerId) &&
-    canScoreMatch(tournament, match, currentPlayerId)
+    Boolean(match.homePlayerId && match.challengerPlayerId) && canScoreMatch(tournament, match, actor)
   const openableToday = dayMatches.some(canOpenMatch)
   const scoringMatch = matches.find((m) => m.id === scoringMatchId)
+
+  const header = (
+    <Header
+      statusLabel={status.label}
+      currentPlayer={currentPlayer}
+      onChangePlayer={() => {
+        setScoringMatchId(null)
+        setCurrentPlayerId(null)
+      }}
+    />
+  )
+
+  const syncBanner = syncError && (
+    <p className="error-box sync-error" role="alert">
+      {syncError}
+      <button type="button" className="link-button" onClick={dismissSyncError}>
+        Dismiss
+      </button>
+    </p>
+  )
+
+  if (showSignIn && !admin.isAdmin) {
+    return (
+      <div className="app">
+        {header}
+        <main className="page">
+          <AdminSignIn
+            signedInEmail={admin.email}
+            isAdmin={admin.isAdmin}
+            onSend={admin.sendSignInLink}
+            onSignOut={admin.signOut}
+            onClose={() => setShowSignIn(false)}
+          />
+        </main>
+      </div>
+    )
+  }
 
   if (scoringMatch && canOpenMatch(scoringMatch)) {
     return (
       <div className="app">
-        <Header
-          statusLabel={status.label}
-          currentPlayer={currentPlayer}
-          onChangePlayer={() => {
-            setScoringMatchId(null)
-            setCurrentPlayerId(null)
-          }}
-        />
+        {header}
         <main className="page">
+          {syncBanner}
           <Scorecard
             key={scoringMatch.id}
             tournament={tournament}
             match={scoringMatch}
             home={playersById[scoringMatch.homePlayerId]}
             challenger={playersById[scoringMatch.challengerPlayerId]}
-            currentPlayerId={currentPlayerId}
-            apply={apply}
+            actor={actor}
+            scoring={scoring}
             onBack={() => setScoringMatchId(null)}
           />
         </main>
@@ -100,13 +180,11 @@ function App() {
 
   return (
     <div className="app">
-      <Header
-        statusLabel={status.label}
-        currentPlayer={currentPlayer}
-        onChangePlayer={() => setCurrentPlayerId(null)}
-      />
+      {header}
 
       <main className="page">
+        {syncBanner}
+
         {tournament.isDemo && tab !== 'Admin' && (
           <p className="demo-notice">
             Demonstration only. These scores are sample values, not a live tournament.
@@ -146,7 +224,7 @@ function App() {
             <>
               {openableToday && (
                 <p className="score-hint">
-                  {isAdmin
+                  {admin.isAdmin
                     ? 'Tap a match to enter or correct scores.'
                     : "Tap your group's matches to enter scores."}
                 </p>
@@ -177,8 +255,24 @@ function App() {
               holesPerMatch={holesPerMatch}
             />
           )}
-          {tab === 'Admin' && <AdminView tournament={tournament} apply={apply} reset={reset} />}
+          {tab === 'Admin' && (
+            <AdminView
+              tournament={tournament}
+              apply={apply}
+              onClearScores={() => scoring.clearAllScores(actor)}
+              adminEmail={admin.email}
+              onSignOut={admin.signOut}
+            />
+          )}
         </section>
+
+        {!admin.isAdmin && (
+          <footer className="page-footer">
+            <button type="button" className="link-button" onClick={() => setShowSignIn(true)}>
+              Admin sign in
+            </button>
+          </footer>
+        )}
       </main>
     </div>
   )

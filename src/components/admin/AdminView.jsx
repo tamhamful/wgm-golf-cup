@@ -7,7 +7,7 @@ import { setCurrentDay } from '../../lib/admin.js'
 
 const SECTIONS = ['Teams & players', 'Pairings', 'Settings']
 
-export default function AdminView({ tournament, apply, reset }) {
+export default function AdminView({ tournament, apply, onClearScores, adminEmail, onSignOut }) {
   const [section, setSection] = useState(SECTIONS[0])
   const [error, setError] = useState(null)
 
@@ -21,9 +21,13 @@ export default function AdminView({ tournament, apply, reset }) {
 
   return (
     <div className="admin">
-      <p className="device-notice">
-        Changes are saved <strong>on this device only</strong> until the online database is set up.
-        Other people won't see them yet.
+      <p className="device-notice admin-signed-in">
+        <span>
+          Signed in as admin: <strong>{adminEmail}</strong>
+        </span>
+        <button type="button" className="link-button" onClick={onSignOut}>
+          Sign out
+        </button>
       </p>
 
       <section className="current-day">
@@ -72,11 +76,8 @@ export default function AdminView({ tournament, apply, reset }) {
         <AdminSettings
           tournament={tournament}
           run={run}
-          confirm={confirm}
-          onReset={() => {
-            reset()
-            setError(null)
-          }}
+          signedInEmail={adminEmail}
+          onClearScores={() => setError(onClearScores())}
         />
       )}
     </div>

@@ -46,7 +46,7 @@ function RemoveButton({ player, run, confirm }) {
 }
 
 export default function AdminTeams({ tournament, run, confirm }) {
-  const { teams, players, adminIds } = tournament
+  const { teams, players } = tournament
   const unassigned = players.filter((p) => !p.teamId)
 
   const nameField = (player) => (
@@ -56,8 +56,6 @@ export default function AdminTeams({ tournament, run, confirm }) {
       onSave={(name) => run(renamePlayer, player.id, name)}
     />
   )
-  const adminTag = (player) =>
-    adminIds.includes(player.id) && <span className="admin-tag">Admin</span>
 
   return (
     <div className="admin-teams-page">
@@ -74,7 +72,6 @@ export default function AdminTeams({ tournament, run, confirm }) {
             {unassigned.map((player) => (
               <li key={player.id} className="admin-player">
                 {nameField(player)}
-                {adminTag(player)}
                 <button
                   type="button"
                   className="button button-assign button-assign-home"
@@ -126,7 +123,6 @@ export default function AdminTeams({ tournament, run, confirm }) {
                 {teamPlayers.map((player) => (
                   <li key={player.id} className="admin-player">
                     {nameField(player)}
-                    {adminTag(player)}
                     <select
                       className="select-input team-select"
                       aria-label={`${player.name} team`}
