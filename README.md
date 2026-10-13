@@ -4,6 +4,8 @@ Live scoring for the WGM Golf Cup: a Ryder Cup–style match-play team
 competition (two teams of six, 18 singles matches over three days, 10 points
 to win).
 
+**Live site:** https://wgm-golf-cup.vercel.app
+
 ## How it fits together
 
 - **App:** React + Vite (`src/`). Mobile-first; deployed on Vercel.
