@@ -1,3 +1,5 @@
+import Brand from './Brand.jsx'
+
 // One alphabetical list with no team information: players may not know
 // their teams until the sides have been picked.
 export default function WhoAreYou({ players, onSelect }) {
@@ -7,10 +9,7 @@ export default function WhoAreYou({ players, onSelect }) {
     <div className="app">
       <header className="topbar">
         <div className="topbar-inner">
-          <div className="brand" aria-label="WGM Golf Cup">
-            <span className="brand-mark">WGM</span>
-            <span className="brand-title">Golf Cup</span>
-          </div>
+          <Brand />
         </div>
       </header>
 

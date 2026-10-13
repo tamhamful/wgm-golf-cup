@@ -27,16 +27,15 @@
 
 .brand {
   display: flex;
-  align-items: baseline;
-  gap: 7px;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
 }
 
-.brand-mark {
-  color: var(--wgm-blue);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.5px;
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 42px;
 }
 
 .brand-title {
@@ -497,8 +496,8 @@
 /* ---------- Mobile ---------- */
 
 @media (max-width: 560px) {
-  .brand-mark {
-    font-size: 18px;
+  .brand-logo {
+    height: 38px;
   }
 
   .brand-title {
