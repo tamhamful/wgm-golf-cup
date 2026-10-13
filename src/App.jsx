@@ -16,6 +16,7 @@ import ResultsView from './components/ResultsView.jsx'
 import WhoAreYou from './components/WhoAreYou.jsx'
 import AdminView from './components/admin/AdminView.jsx'
 import AdminSignIn from './components/AdminSignIn.jsx'
+import { useScreenHistory } from './state/useScreenHistory.js'
 import Scorecard from './components/Scorecard.jsx'
 import Ticker from './components/Ticker.jsx'
 import { buildTickerEvents } from './lib/ticker.js'
@@ -85,9 +86,12 @@ function TournamentApp({ data, admin }) {
   const currentDay = tournament.currentDay ?? days[0]
   const status = getTournamentStatus(matches, days, holesPerMatch, currentDay)
 
-  const [activeTab, setActiveTab] = useState('Leaderboard')
-  const [scoringMatchId, setScoringMatchId] = useState(null)
-  const [showSignIn, setShowSignIn] = useState(false)
+  // Which screen is showing. Each change is a step in the phone's history,
+  // so its back button returns to the previous screen.
+  const { screen, go, back } = useScreenHistory()
+  const activeTab = screen.tab
+  const scoringMatchId = screen.matchId
+  const showSignIn = screen.signIn
 
   // The leaderboard shows the admin's current day. A viewer can tap another
   // day to look at it, but when the admin changes the day everyone follows.
@@ -125,7 +129,7 @@ function TournamentApp({ data, admin }) {
       statusLabel={status.label}
       currentPlayer={currentPlayer}
       onChangePlayer={() => {
-        setScoringMatchId(null)
+        go({ matchId: null, signIn: false, tab: 'Leaderboard' })
         setCurrentPlayerId(null)
       }}
     />
@@ -150,7 +154,7 @@ function TournamentApp({ data, admin }) {
             isAdmin={admin.isAdmin}
             onSend={admin.sendSignInLink}
             onSignOut={admin.signOut}
-            onClose={() => setShowSignIn(false)}
+            onClose={back}
           />
         </main>
       </div>
@@ -171,7 +175,7 @@ function TournamentApp({ data, admin }) {
             challenger={playersById[scoringMatch.challengerPlayerId]}
             actor={actor}
             scoring={scoring}
-            onBack={() => setScoringMatchId(null)}
+            onBack={back}
           />
         </main>
       </div>
@@ -179,7 +183,7 @@ function TournamentApp({ data, admin }) {
   }
 
   const openScorecard = (match) => {
-    setScoringMatchId(match.id)
+    go({ matchId: match.id })
     window.scrollTo(0, 0)
   }
 
@@ -209,7 +213,7 @@ function TournamentApp({ data, admin }) {
               type="button"
               className={`tab ${tab === name ? 'is-active' : ''} ${name === 'Admin' ? 'tab-admin' : ''}`}
               aria-current={tab === name ? 'page' : undefined}
-              onClick={() => setActiveTab(name)}
+              onClick={() => name !== tab && go({ tab: name })}
             >
               {name}
             </button>
@@ -279,7 +283,7 @@ function TournamentApp({ data, admin }) {
 
         {!admin.isAdmin && (
           <footer className="page-footer">
-            <button type="button" className="link-button" onClick={() => setShowSignIn(true)}>
+            <button type="button" className="link-button" onClick={() => go({ signIn: true })}>
               Admin sign in
             </button>
           </footer>

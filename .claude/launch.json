@@ -8,6 +8,12 @@
       "port": 5173
     },
     {
+      "name": "wgm-dev-network",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5173", "--strictPort", "--host"],
+      "port": 5173
+    },
+    {
       "name": "wgm-production-preview",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "4173", "--strictPort"],

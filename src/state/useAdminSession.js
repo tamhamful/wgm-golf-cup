@@ -26,7 +26,7 @@ export function useAdminSession() {
       setTimeout(() => check(session), 0)
       // Tidy the sign-in code out of the address bar after following the link.
       if (session && window.location.search.includes('code=')) {
-        window.history.replaceState(null, '', window.location.pathname)
+        window.history.replaceState(window.history.state, '', window.location.pathname)
       }
     })
     return () => listener.subscription.unsubscribe()
