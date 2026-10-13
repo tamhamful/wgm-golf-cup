@@ -1915,3 +1915,33 @@ button.match-row {
     font-size: 12px;
   }
 }
+
+/* ---------- Captain / vice-captain ---------- */
+
+.role-tag {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.match-player:not(.is-leading) .role-tag,
+.players-list .role-tag {
+  color: var(--wgm-blue-2);
+}
+
+.team-roles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.team-role {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.team-role .select-input {
+  min-height: 38px;
+  font-size: 14px;
+}

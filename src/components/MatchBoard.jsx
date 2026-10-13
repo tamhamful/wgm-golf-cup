@@ -1,6 +1,17 @@
-import { describeMatch, STATUS, UNASSIGNED_PLAYER } from '../lib/tournament.js'
+import { describeMatch, STATUS, teamRoleOf, UNASSIGNED_PLAYER } from '../lib/tournament.js'
 
-function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch, onOpen }) {
+// Player name with (C) or (VC) after it for a captain or vice-captain.
+function PlayerName({ player, teams }) {
+  const role = teamRoleOf(teams, player)
+  return (
+    <span className="match-player-name">
+      {player.name}
+      {role && <span className="role-tag"> ({role})</span>}
+    </span>
+  )
+}
+
+function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch, onOpen, teams }) {
   const view = describeMatch(match, holesPerMatch)
   const started = view.status !== STATUS.NOT_STARTED
   const homeLeads = view.side === 'HOME'
@@ -32,7 +43,7 @@ function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch, onOpen }
         className={`match-player match-player-home ${homeLeads ? 'is-leading' : ''}`}
         aria-hidden="true"
       >
-        <span className="match-player-name">{homePlayer.name}</span>
+        <PlayerName player={homePlayer} teams={teams} />
         {homeScore && <span className="match-score">{homeScore}</span>}
       </span>
 
@@ -53,7 +64,7 @@ function MatchRow({ match, homePlayer, challengerPlayer, holesPerMatch, onOpen }
         aria-hidden="true"
       >
         {challengerScore && <span className="match-score">{challengerScore}</span>}
-        <span className="match-player-name">{challengerPlayer.name}</span>
+        <PlayerName player={challengerPlayer} teams={teams} />
       </span>
     </>
   )
@@ -98,6 +109,7 @@ export default function MatchBoard({ matches, teams, playersById, holesPerMatch,
             homePlayer={playersById[match.homePlayerId] ?? UNASSIGNED_PLAYER}
             challengerPlayer={playersById[match.challengerPlayerId] ?? UNASSIGNED_PLAYER}
             holesPerMatch={holesPerMatch}
+            teams={teams}
             onOpen={canOpen(match) ? onOpen : null}
           />
         ))}

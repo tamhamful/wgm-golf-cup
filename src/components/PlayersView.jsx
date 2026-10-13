@@ -1,3 +1,5 @@
+import { teamRoleOf } from '../lib/tournament.js'
+
 export default function PlayersView({ teams, players }) {
   const unassigned = players.filter((p) => !p.teamId)
 
@@ -13,9 +15,15 @@ export default function PlayersView({ teams, players }) {
                 <span className="players-count">{teamPlayers.length} players</span>
               </h2>
               <ul className="players-list">
-                {teamPlayers.map((player) => (
-                  <li key={player.id}>{player.name}</li>
-                ))}
+                {teamPlayers.map((player) => {
+                  const role = teamRoleOf(teams, player)
+                  return (
+                    <li key={player.id}>
+                      {player.name}
+                      {role && <span className="role-tag"> ({role})</span>}
+                    </li>
+                  )
+                })}
               </ul>
             </section>
           )

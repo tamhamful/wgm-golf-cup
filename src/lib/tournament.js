@@ -10,6 +10,15 @@ export { STATUS }
 // Shown in place of a player who hasn't been chosen for a match yet.
 export const UNASSIGNED_PLAYER = { id: null, name: 'TBC' }
 
+// "C" for a team captain, "VC" for a vice-captain, otherwise null.
+export function teamRoleOf(teams, player) {
+  const team = player?.id && teams[player.teamId]
+  if (!team) return null
+  if (team.captainId === player.id) return 'C'
+  if (team.viceCaptainId === player.id) return 'VC'
+  return null
+}
+
 export const STATUS_LABEL = {
   NOT_STARTED: 'Not started',
   LIVE: 'Live',

@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { addPlayer, movePlayer, removePlayer, renamePlayer, renameTeam } from '../../lib/admin.js'
+import {
+  addPlayer,
+  movePlayer,
+  removePlayer,
+  renamePlayer,
+  renameTeam,
+  setTeamRole,
+  TEAM_ROLES,
+} from '../../lib/admin.js'
 import EditableText from './EditableText.jsx'
 
 const TEAM_IDS = ['HOME', 'CHALLENGERS']
@@ -113,6 +121,28 @@ export default function AdminTeams({ tournament, run, confirm }) {
                 value={teams[teamId].name}
                 onSave={(name) => run(renameTeam, teamId, name)}
               />
+
+              <div className="team-roles">
+                {Object.entries(TEAM_ROLES).map(([role, { label, short }]) => (
+                  <label key={role} className="team-role">
+                    <span className="field-label">
+                      {label} ({short})
+                    </span>
+                    <select
+                      className={`select-input ${teams[teamId][role] ? '' : 'is-empty'}`}
+                      value={teams[teamId][role] ?? ''}
+                      onChange={(e) => run(setTeamRole, teamId, role, e.target.value || null)}
+                    >
+                      <option value="">None</option>
+                      {teamPlayers.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
 
               <div className="admin-team-count">
                 <span>{teamPlayers.length} players</span>

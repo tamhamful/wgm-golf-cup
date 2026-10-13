@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import * as A from './admin.js'
 import { createDemoTournament } from '../data/demoTournament.js'
+import { teamRoleOf } from './tournament.js'
 
 const matchOf = (t, id) => t.matches.find((m) => m.id === id)
 const playerOf = (t, id) => t.players.find((p) => p.id === id)
@@ -61,6 +62,30 @@ test('moving a player to unassigned clears their unstarted pairings', () => {
   const t = A.movePlayer(createDemoTournament(), 'h5', null)
   assert.equal(playerOf(t, 'h5').teamId, null)
   assert.ok(!t.matches.some((m) => m.homePlayerId === 'h5'))
+})
+
+test('captain and vice-captain', () => {
+  let t = createDemoTournament()
+  t = A.setTeamRole(t, 'HOME', 'captainId', 'h1')
+  t = A.setTeamRole(t, 'HOME', 'viceCaptainId', 'h2')
+  assert.equal(t.teams.HOME.captainId, 'h1')
+  assert.equal(t.teams.HOME.viceCaptainId, 'h2')
+  assert.equal(teamRoleOf(t.teams, playerOf(t, 'h1')), 'C')
+  assert.equal(teamRoleOf(t.teams, playerOf(t, 'h2')), 'VC')
+  assert.equal(teamRoleOf(t.teams, playerOf(t, 'h3')), null)
+  // Can't be both, and must be on that team
+  assert.throws(() => A.setTeamRole(t, 'HOME', 'viceCaptainId', 'h1'), /already the captain/)
+  assert.throws(() => A.setTeamRole(t, 'HOME', 'captainId', 'c1'), /not on/)
+  // Clearing a role
+  assert.equal(A.setTeamRole(t, 'HOME', 'viceCaptainId', null).teams.HOME.viceCaptainId, null)
+})
+
+test('moving or removing a captain clears the role', () => {
+  let t = createDemoTournament()
+  t = A.setTeamRole(t, 'CHALLENGERS', 'captainId', 'c6') // Alan Murray, only in unstarted matches
+  t = A.setTeamRole(t, 'HOME', 'viceCaptainId', 'h6') // Mark Stewart, likewise
+  assert.equal(A.movePlayer(t, 'c6', 'HOME').teams.CHALLENGERS.captainId, null)
+  assert.equal(A.removePlayer(t, 'h6').teams.HOME.viceCaptainId, null)
 })
 
 test('admin sets the current day', () => {

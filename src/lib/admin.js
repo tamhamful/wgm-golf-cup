@@ -28,7 +28,22 @@ function unassignPlayer(t, playerId, actionText) {
     homePlayerId: m.homePlayerId === playerId ? null : m.homePlayerId,
     challengerPlayerId: m.challengerPlayerId === playerId ? null : m.challengerPlayerId,
   }))
-  return { ...t, matches }
+  return clearTeamRoles({ ...t, matches }, playerId)
+}
+
+// A player leaving a team also stops being its captain or vice-captain.
+function clearTeamRoles(t, playerId) {
+  const teams = Object.fromEntries(
+    Object.entries(t.teams).map(([id, team]) => [
+      id,
+      {
+        ...team,
+        captainId: team.captainId === playerId ? null : (team.captainId ?? null),
+        viceCaptainId: team.viceCaptainId === playerId ? null : (team.viceCaptainId ?? null),
+      },
+    ]),
+  )
+  return { ...t, teams }
 }
 
 function cleanName(name) {
@@ -41,6 +56,30 @@ function cleanName(name) {
 
 export function renameTeam(t, teamId, name) {
   return { ...t, teams: { ...t.teams, [teamId]: { ...t.teams[teamId], name: cleanName(name) } } }
+}
+
+export const TEAM_ROLES = {
+  captainId: { label: 'Captain', short: 'C' },
+  viceCaptainId: { label: 'Vice-captain', short: 'VC' },
+}
+
+// Sets a team's captain or vice-captain (role: 'captainId' or 'viceCaptainId').
+// playerId null clears the role.
+export function setTeamRole(t, teamId, role, playerId) {
+  if (!TEAM_ROLES[role]) throw new Error('Unknown team role.')
+  const team = t.teams[teamId]
+  const otherRole = role === 'captainId' ? 'viceCaptainId' : 'captainId'
+
+  if (playerId) {
+    const player = findPlayer(t, playerId)
+    if (player.teamId !== teamId) throw new Error(`${player.name} is not on ${team.name}.`)
+    if (team[otherRole] === playerId) {
+      throw new Error(
+        `${player.name} is already the ${TEAM_ROLES[otherRole].label.toLowerCase()}. Choose someone else, or change that first.`,
+      )
+    }
+  }
+  return { ...t, teams: { ...t.teams, [teamId]: { ...team, [role]: playerId || null } } }
 }
 
 // ---------- Players ----------
