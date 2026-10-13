@@ -122,13 +122,18 @@ test('a finished match will not accept another hole', () => {
   assert.throws(() => recordHole(demo(), 'm3', 18, 'HOME', ADMIN), /finished/)
 })
 
-test('only an admin can correct a finished match', () => {
-  // m3 David Kelly (h3) won 2&1; Bobby Brown (c3) is in that group but not an admin
-  assert.throws(() => recordHole(demo(), 'm3', 1, 'CHALLENGERS', player('c3')), /Only an admin/)
-  const t = recordHole(demo(), 'm3', 1, 'CHALLENGERS', ADMIN)
+test('players in the group can correct a finished match', () => {
+  // m3 David Kelly (h3) won 2&1; Bobby Brown (c3) is in that group (not an admin)
+  const t = recordHole(demo(), 'm3', 1, 'CHALLENGERS', player('c3'))
   const s = computeMatchState(matchOf(t, 'm3').holes)
   assert.equal(s.status, 'LIVE') // now all square after 17, so hole 18 is needed
   assert.equal(s.margin, 0)
+  // ...and can undo its last hole
+  assert.equal(matchOf(undoLastHole(demo(), 'm3', player('c3')), 'm3').holes.length, 16)
+})
+
+test('players outside the group cannot correct a finished match', () => {
+  assert.throws(() => recordHole(demo(), 'm3', 1, 'CHALLENGERS', player('c5')), /Only the players in this group/)
 })
 
 test('correcting an earlier hole recalculates the position', () => {

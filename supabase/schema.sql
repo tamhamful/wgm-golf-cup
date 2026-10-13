@@ -16,8 +16,9 @@
 --   * Anyone can READ the tournament and scores (the leaderboard).
 --   * Nobody can write to the tables directly. All changes go through the
 --     functions below, which check the rules first.
---   * Setup changes, resets and corrections to finished matches need a
---     signed-in admin (checked against the admins table).
+--   * Setup changes and resets need a signed-in admin (checked against the
+--     admins table). Scores, including corrections to finished matches,
+--     can be entered by the match's group of four or an admin.
 --   * Players are identified by the name picked in the app. This stops
 --     mistakes but is not proof of identity (agreed trade-off).
 -- =====================================================================
@@ -185,11 +186,10 @@ begin
 
   if p_hole < 1 or p_hole > hpm then raise exception 'That hole number is not valid.'; end if;
   if p_hole > prog.played + 1 then raise exception 'Enter hole % first.', prog.played + 1; end if;
+  -- A finished match can't take more holes, but its holes can still be
+  -- corrected by the group's players or an admin.
   if p_hole = prog.played + 1 and prog.complete then
     raise exception 'This match is finished. No more holes can be added.';
-  end if;
-  if p_hole <= prog.played and prog.complete and not admin then
-    raise exception 'This match is finished. Only an admin can correct it.';
   end if;
 
   new_holes := coalesce(cur[1:prog.played], '{}');
@@ -241,9 +241,6 @@ begin
 
   select * into prog from public.match_progress(cur, hpm);
   if prog.played = 0 then raise exception 'No holes have been entered yet.'; end if;
-  if prog.complete and not admin then
-    raise exception 'This match is finished. Only an admin can correct it.';
-  end if;
 
   new_holes := coalesce(cur[1:prog.played - 1], '{}');
   update public.match_scores

@@ -49,7 +49,12 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
   const state = computeMatchState(match.holes, holesPerMatch)
   const { isAdmin } = actor
   const isComplete = state.status === STATUS.COMPLETE
-  const canEdit = !isComplete || isAdmin
+
+  // A finished match can still be corrected, but check first so a stray tap
+  // doesn't change a result.
+  const confirmFinishedChange = (what) =>
+    !isComplete ||
+    window.confirm(`This match is finished (${state.result === 'HALVED' ? 'halved' : state.result}). ${what} may change the result. Continue?`)
 
   const [selectedHole, setSelectedHole] = useState(null) // null = next hole
   const [message, setMessage] = useState(null)
@@ -59,6 +64,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
   const isCorrection = selectedHole !== null
 
   const record = (result) => {
+    if (!confirmFinishedChange(`Changing hole ${activeHole}`)) return
     // Warn if a correction would end the match earlier and remove later holes.
     let note = null
     if (isCorrection) {
@@ -77,6 +83,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
   }
 
   const undo = () => {
+    if (!confirmFinishedChange(`Undoing hole ${state.holesPlayed}`)) return
     const error = scoring.undoLastHole(match.id, actor)
     setMessage(error ? { type: 'error', text: error } : null)
   }
@@ -90,7 +97,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
 
   const onHoleTap = (hole) => {
     setMessage(null)
-    if (hole > state.holesPlayed || !canEdit) return
+    if (hole > state.holesPlayed) return
     setSelectedHole(hole === selectedHole ? null : hole)
   }
 
@@ -118,7 +125,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
         type="button"
         className={`hole-cell ${cls} ${hole === activeHole ? 'is-active' : ''}`}
         onClick={() => onHoleTap(hole)}
-        disabled={!result || !canEdit}
+        disabled={!result}
         aria-label={label}
         aria-pressed={hole === selectedHole}
       >
@@ -161,7 +168,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
         </p>
       )}
 
-      {activeHole && canEdit && (
+      {activeHole && (
         <section className="hole-entry" aria-label={`Enter result for hole ${activeHole}`}>
           <h2 className="hole-entry-title">
             {isCorrection ? `Change hole ${activeHole}` : `Hole ${activeHole}`}
@@ -198,14 +205,16 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
         </section>
       )}
 
-      {isComplete && !isAdmin && (
-        <p className="settings-help">This match is finished. If a hole is wrong, ask an admin to correct it.</p>
+      {isComplete && !isCorrection && (
+        <p className="settings-help">
+          This match is finished. If a hole is wrong, tap it below to correct it.
+        </p>
       )}
 
       <section className="hole-grid-section" aria-label="Hole by hole">
         <div className="hole-grid-heading">
           <span>Hole by hole</span>
-          {canEdit && state.holesPlayed > 0 && <span>Tap a hole to change it</span>}
+          {state.holesPlayed > 0 && <span>Tap a hole to change it</span>}
         </div>
         <div className="hole-grid">{holeNumbers.slice(0, half).map(holeCell)}</div>
         <div className="hole-grid">{holeNumbers.slice(half).map(holeCell)}</div>

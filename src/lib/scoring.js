@@ -127,7 +127,6 @@ export function recordHole(t, matchId, holeNumber, result, actor) {
   }
 
   const state = computeMatchState(match.holes, t.holesPerMatch)
-  const { isAdmin } = actor
 
   if (!Number.isInteger(holeNumber) || holeNumber < 1 || holeNumber > t.holesPerMatch) {
     throw new Error('That hole number is not valid.')
@@ -135,11 +134,10 @@ export function recordHole(t, matchId, holeNumber, result, actor) {
   if (holeNumber > state.holesPlayed + 1) {
     throw new Error(`Enter hole ${state.holesPlayed + 1} first.`)
   }
+  // A finished match can't take more holes, but any of its holes can still
+  // be corrected by the group's players or an admin.
   if (holeNumber === state.holesPlayed + 1 && state.status === STATUS.COMPLETE) {
     throw new Error(`This match is finished (${state.result}). No more holes can be added.`)
-  }
-  if (holeNumber <= state.holesPlayed && state.status === STATUS.COMPLETE && !isAdmin) {
-    throw new Error('This match is finished. Only an admin can correct it.')
   }
 
   const holes = match.holes.slice(0, state.holesPlayed)
@@ -156,9 +154,6 @@ export function undoLastHole(t, matchId, actor) {
   checkCanScore(t, match, actor)
   const state = computeMatchState(match.holes, t.holesPerMatch)
   if (state.holesPlayed === 0) throw new Error('No holes have been entered yet.')
-  if (state.status === STATUS.COMPLETE && !actor.isAdmin) {
-    throw new Error('This match is finished. Only an admin can correct it.')
-  }
   return withHoles(t, matchId, match.holes.slice(0, state.holesPlayed - 1))
 }
 
