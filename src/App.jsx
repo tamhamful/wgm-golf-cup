@@ -10,9 +10,7 @@ import Header from './components/Header.jsx'
 import Scoreboard from './components/Scoreboard.jsx'
 import DaySelector from './components/DaySelector.jsx'
 import MatchBoard from './components/MatchBoard.jsx'
-import MatchSchedule from './components/MatchSchedule.jsx'
 import PlayersView from './components/PlayersView.jsx'
-import ResultsView from './components/ResultsView.jsx'
 import WhoAreYou from './components/WhoAreYou.jsx'
 import AdminView from './components/admin/AdminView.jsx'
 import AdminSignIn from './components/AdminSignIn.jsx'
@@ -23,7 +21,7 @@ import { buildTickerEvents } from './lib/ticker.js'
 import { getPlayerRankings } from './lib/rankings.js'
 import RankingsView from './components/RankingsView.jsx'
 
-const TABS = ['Leaderboard', 'Matches', 'Players', 'Results', 'Rankings']
+const TABS = ['Leaderboard', 'Rankings', 'Players']
 
 function Message({ title, children }) {
   return (
@@ -116,7 +114,7 @@ function TournamentApp({ data, admin }) {
   const tab = tabs.includes(activeTab) ? activeTab : 'Leaderboard'
 
   const dayMatches = matches.filter((m) => m.day === activeDay)
-  const showDays = tab === 'Leaderboard' || tab === 'Matches'
+  const showDays = tab === 'Leaderboard'
 
   // Scoring: only the four players in a match's group, or an admin, can open it.
   const canOpenMatch = (match) =>
@@ -244,22 +242,6 @@ function TournamentApp({ data, admin }) {
               />
             </>
           )}
-          {tab === 'Matches' && (
-            <MatchSchedule
-              matches={dayMatches}
-              playersById={playersById}
-              holesPerMatch={holesPerMatch}
-            />
-          )}
-          {tab === 'Players' && <PlayersView teams={teams} players={players} />}
-          {tab === 'Results' && (
-            <ResultsView
-              matches={matches}
-              teams={teams}
-              playersById={playersById}
-              holesPerMatch={holesPerMatch}
-            />
-          )}
           {tab === 'Rankings' && (
             <RankingsView
               rankings={getPlayerRankings(tournament)}
@@ -267,6 +249,7 @@ function TournamentApp({ data, admin }) {
               currentPlayerId={currentPlayerId}
             />
           )}
+          {tab === 'Players' && <PlayersView teams={teams} players={players} />}
           {tab === 'Admin' && (
             <AdminView
               tournament={tournament}

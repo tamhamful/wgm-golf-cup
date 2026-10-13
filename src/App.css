@@ -431,46 +431,7 @@
   font-weight: 500;
 }
 
-/* ---------- Matches tab (schedule) ---------- */
-
-.schedule-list {
-  border-top: 1px solid var(--line);
-}
-
-.schedule-row {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 4px;
-  border-bottom: 1px solid var(--line);
-}
-
-.schedule-number {
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.schedule-players {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.schedule-player {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 500;
-  overflow-wrap: anywhere;
-}
-
-.schedule-player.is-leading {
-  font-weight: 700;
-}
+/* ---------- Team colour dots ---------- */
 
 .team-dot {
   width: 8px;
@@ -485,51 +446,6 @@
 
 .team-dot-challengers {
   background: var(--wgm-green);
-}
-
-.schedule-state {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 5px;
-  text-align: right;
-}
-
-.schedule-position {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.schedule-detail {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.status-badge {
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.status-badge-not_started {
-  background: var(--surface-soft);
-  color: var(--muted);
-}
-
-.status-badge-live {
-  background: #e9f4f9;
-  color: var(--wgm-blue-2);
-}
-
-.status-badge-complete {
-  background: var(--wgm-navy);
-  color: #fff;
 }
 
 /* ---------- Players tab ---------- */
@@ -569,64 +485,7 @@
   font-size: 14px;
 }
 
-/* ---------- Results tab ---------- */
-
-.results-list {
-  border-top: 1px solid var(--line);
-}
-
-.result-row {
-  display: grid;
-  gap: 6px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.result-meta,
-.result-points {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.result-players {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.result-players > span {
-  overflow-wrap: anywhere;
-}
-
-.result-players > span:last-child {
-  text-align: right;
-}
-
-.result-score {
-  font-weight: 800;
-}
-
-.result-winner {
-  font-weight: 700;
-}
-
-.result-winner-home {
-  color: var(--wgm-blue);
-}
-
-.result-winner-challengers {
-  color: var(--wgm-green);
-}
-
-.result-points {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
+/* ---------- Shared ---------- */
 
 .empty-state {
   padding: 32px 0;
@@ -735,11 +594,6 @@
   .players-grid {
     grid-template-columns: 1fr;
     gap: 16px;
-  }
-
-  .result-players {
-    gap: 8px;
-    font-size: 14px;
   }
 }
 
