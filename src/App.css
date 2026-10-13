@@ -1699,11 +1699,17 @@ button.match-row {
   font-variant-numeric: tabular-nums;
 }
 
+/* The dot lines up with the player's name (first line), not the team line. */
 .rankings-player {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   min-width: 0;
+}
+
+.rankings-player .team-dot {
+  align-self: flex-start;
+  margin-top: 6px;
 }
 
 .rankings-name {
@@ -1721,8 +1727,9 @@ button.match-row {
   font-weight: 500;
 }
 
+/* Numbers sit centred under their column headings. */
 .rankings-num {
-  text-align: right;
+  text-align: center;
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
