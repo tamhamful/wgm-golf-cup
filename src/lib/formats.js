@@ -2,8 +2,9 @@
 // an admin (stored in tournament.dayFormats, e.g. { 1: 'FOURBALL' }).
 //
 //   MATCH formats  – a point per match, decided hole by hole (who won it).
-//   TEAM_TOTAL     – gross scores entered per player; the better team total
-//                    for the day wins the day's points (shared if tied).
+//   TEAM_TOTAL     – gross scores entered per player (Stableford / stroke
+//                    play); the top 6 individual scores each earn a cup
+//                    point for their team.
 
 export const FORMATS = {
   SINGLES: { label: 'Singles match play', short: 'Singles', kind: 'MATCH', perSide: 1 },
@@ -17,7 +18,7 @@ export const FORMAT_IDS = Object.keys(FORMATS)
 
 export const PLAYERS_PER_TEAM = 6
 export const GROUPS_PER_DAY = 3
-// Points a team-total day (Stableford / Stroke play) is worth.
+// Points a Stableford / stroke play day is worth: one for each of the top 6.
 export const TEAM_TOTAL_DAY_POINTS = 6
 
 export function formatForDay(t, day) {

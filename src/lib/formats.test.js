@@ -6,7 +6,7 @@ import { createDemoTournament } from '../data/demoTournament.js'
 import * as A from './admin.js'
 import { canScoreMatch, recordHole } from './scoring.js'
 import { DEFAULT_COURSE, totalPointsAvailable } from './formats.js'
-import { computePairing, dayTeamTotals, scoreRound, shotsOnHole, stablefordPoints } from './strokeplay.js'
+import { computePairing, dayCupPoints, scoreRound, shotsOnHole, stablefordPoints } from './strokeplay.js'
 import { getProjectedPoints, getTeamPoints, matchView } from './tournament.js'
 import { getDayRankings, getPlayerRankings } from './rankings.js'
 import { buildTickerEvents } from './ticker.js'
@@ -174,23 +174,41 @@ test('Stableford: points with handicap, pairing and leaderboard view', () => {
   assert.equal(view.side, 'HOME')
 })
 
-test('Stableford day: better team total wins 6 points, only once every pairing finishes', () => {
+test('Stableford day: the top 6 scores each earn a cup point, once every pairing finishes', () => {
   let t = A.setDayFormat(fresh(), 3, 'STABLEFORD')
   const first = dayMatches(t, 3)[0]
   for (let hole = 1; hole <= 18; hole++) t = recordHole(t, first.id, hole, '4:5', ADMIN)
   assert.deepEqual(getTeamPoints(t), { HOME: 0, CHALLENGERS: 0 }) // day not finished
-  assert.deepEqual(getProjectedPoints(t), { HOME: 6, CHALLENGERS: 0 }) // Home ahead so far
-  t = playDay3(t, 4, 5) // everyone else: Home pars, Challengers bogeys
-  const day = dayTeamTotals(t, 3)
+  // As it stands only two players have scores, so both are in the top 6
+  assert.deepEqual(getProjectedPoints(t), { HOME: 1, CHALLENGERS: 1 })
+  t = playDay3(t, 4, 5) // everyone else: Home pars (36 pts), Challengers bogeys (18 pts)
+  const day = dayCupPoints(t, 3)
   assert.equal(day.complete, true)
-  assert.equal(day.totals.HOME, 6 * 36)
-  assert.equal(day.totals.CHALLENGERS, 6 * 18)
+  assert.deepEqual(day.points, { HOME: 6, CHALLENGERS: 0 }) // all six Home players are the top 6
   assert.deepEqual(getTeamPoints(t), { HOME: 6, CHALLENGERS: 0 })
   const texts = buildTickerEvents(t).map((e) => e.text)
-  assert.ok(texts.includes('Home Team win the Day 3 Stableford, 216 pts – 108 pts: 6 points'))
+  assert.ok(texts.includes('Home Team take 6 of the 6 points on the Day 3 Stableford (6 – 0)'))
 })
 
-test('Stroke play day: lower net total wins; a tie shares 3 points each', () => {
+test('Stableford day: players tied on the cut-off share the last point', () => {
+  let t = A.setDayFormat(fresh(), 3, 'STABLEFORD')
+  // Day 3 pairings: h1-c3, h2-c4, h3-c5, h4-c6, h5-c1, h6-c2 (all handicap 0)
+  // gross 3 every hole = 54 pts, gross 4 = 36 pts, gross 6 = 4 pts (par 5s only)
+  const scores = ['3:6', '3:6', '3:6', '3:6', '3:4', '4:6']
+  dayMatches(t, 3).forEach((m, i) => {
+    for (let hole = 1; hole <= 18; hole++) t = recordHole(t, m.id, hole, scores[i], ADMIN)
+  })
+  // h1-h5 take places 1-5; h6 and c1 tie for 6th on 36 and share the last point
+  const day = dayCupPoints(t, 3)
+  assert.deepEqual(day.points, { HOME: 5.5, CHALLENGERS: 0.5 })
+  assert.equal(day.byPlayer.get('h6'), 0.5)
+  assert.equal(day.byPlayer.get('c1'), 0.5)
+  assert.equal(day.byPlayer.get('c2') ?? 0, 0)
+  const texts = buildTickerEvents(t).map((e) => e.text)
+  assert.ok(texts.includes('Home Team take 5.5 of the 6 points on the Day 3 Stableford (5.5 – 0.5)'))
+})
+
+test('Stroke play day: top 6 lowest net scores earn the points; all level shares 3 – 3', () => {
   let t = A.setDayFormat(fresh(), 3, 'STROKE')
   t = playDay3(t, 5, 4) // Home bogeys, Challengers pars
   assert.deepEqual(getTeamPoints(t), { HOME: 0, CHALLENGERS: 6 })
@@ -209,6 +227,9 @@ test('day rankings: most Stableford points first', () => {
   assert.equal(r[1].points, 36) // the Home players, all level on 36...
   assert.equal(r[1].rank, 1) // ...share 1st with Bobby
   assert.equal(r.at(-1).points, 4) // a point on each of the four par 5s
+  // Seven players level on 36 for 1st share the six points: 6/7 each
+  assert.ok(Math.abs(r[0].cupPoints - 6 / 7) < 1e-9)
+  assert.equal(r.at(-1).cupPoints, 0)
 })
 
 // ---------- Handicaps and course ----------

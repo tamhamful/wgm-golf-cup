@@ -7,7 +7,7 @@
 // Scores above net double bogey are also capped at it in stroke play.
 
 import { STATUS } from './scoring.js'
-import { courseOf, formatForDay } from './formats.js'
+import { courseOf, formatForDay, TEAM_TOTAL_DAY_POINTS } from './formats.js'
 
 export const PICK_UP = 'P'
 
@@ -98,22 +98,47 @@ export const formatTeamTotal = (format, value) =>
         ? `+${value}`
         : `−${Math.abs(value)}`
 
-// Team totals for a Stableford / stroke play day.
-//   totals: Stableford points (higher is better) or net to par (lower).
-//   leader: team doing better, or null if level / not started.
-//   complete: every pairing has finished.
-export function dayTeamTotals(t, day) {
+// Cup points for a Stableford / stroke play day.
+// Every player is ranked on their own score (most Stableford points, or
+// lowest net to par). Each of the top places (6) earns a cup point for their
+// team. Players tied across the cut-off share what's left, e.g. two players
+// tied for 6th get ½ each.
+//   points: cup points per team; byPlayer: cup points per player id.
+//   started / complete: any / every pairing has started / finished.
+//   Only players who have started are counted, so during the day this is
+//   the split "as things stand".
+export function dayCupPoints(t, day, places = TEAM_TOTAL_DAY_POINTS) {
   const format = formatForDay(t, day)
-  const pairings = t.matches.filter((m) => m.day === day).map((m) => computePairing(t, m))
-  const totals = { HOME: 0, CHALLENGERS: 0 }
-  for (const p of pairings) {
-    for (const side of ['HOME', 'CHALLENGERS']) {
-      totals[side] += format === 'STABLEFORD' ? p.round[side].points : p.round[side].netToPar
+  const pairings = t.matches.filter((m) => m.day === day).map((m) => ({ match: m, ...computePairing(t, m) }))
+  const value = (round) => (format === 'STABLEFORD' ? -round.points : round.netToPar) // lower is better
+
+  const players = pairings
+    .filter((p) => p.holesPlayed > 0)
+    .flatMap((p) => [
+      { id: p.match.homePlayerId, side: 'HOME', value: value(p.round.HOME) },
+      { id: p.match.challengerPlayerId, side: 'CHALLENGERS', value: value(p.round.CHALLENGERS) },
+    ])
+    .sort((a, b) => a.value - b.value)
+
+  const byPlayer = new Map()
+  const points = { HOME: 0, CHALLENGERS: 0 }
+  let left = places
+  for (let i = 0; i < players.length && left > 0; ) {
+    const tied = players.filter((x) => x.value === players[i].value)
+    const each = tied.length <= left ? 1 : left / tied.length
+    for (const x of tied) {
+      byPlayer.set(x.id, each)
+      points[x.side] += each
     }
+    left -= Math.min(left, tied.length)
+    i += tied.length
   }
-  const started = pairings.some((p) => p.status !== STATUS.NOT_STARTED)
-  const complete = pairings.length > 0 && pairings.every((p) => p.status === STATUS.COMPLETE)
-  const edge = format === 'STABLEFORD' ? totals.HOME - totals.CHALLENGERS : totals.CHALLENGERS - totals.HOME
-  const leader = !started || edge === 0 ? null : edge > 0 ? 'HOME' : 'CHALLENGERS'
-  return { format, totals, leader, started, complete, pairings }
+
+  return {
+    format,
+    points,
+    byPlayer,
+    started: pairings.some((p) => p.status !== STATUS.NOT_STARTED),
+    complete: pairings.length > 0 && pairings.every((p) => p.status === STATUS.COMPLETE),
+  }
 }

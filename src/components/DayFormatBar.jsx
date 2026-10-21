@@ -1,9 +1,9 @@
 import { dayPoints, FORMATS, formatForDay, isTeamTotalFormat } from '../lib/formats.js'
-import { dayTeamTotals, formatTeamTotal } from '../lib/strokeplay.js'
+import { dayCupPoints } from '../lib/strokeplay.js'
 import { formatPoints } from '../lib/tournament.js'
 
 // Above the leaderboard: the day's format, and on Stableford / stroke play
-// days the live team totals that decide the day's points.
+// days how the top-6 cup points currently split between the teams.
 export default function DayFormatBar({ tournament, day }) {
   const format = formatForDay(tournament, day)
   const points = dayPoints(tournament, day)
@@ -20,11 +20,12 @@ export default function DayFormatBar({ tournament, day }) {
     )
   }
 
-  const { totals, leader, started, complete } = dayTeamTotals(tournament, day)
+  const { points: split, started, complete } = dayCupPoints(tournament, day)
   const { teams } = tournament
+  const leader = split.HOME > split.CHALLENGERS ? 'HOME' : split.CHALLENGERS > split.HOME ? 'CHALLENGERS' : null
   const side = (id) => (
     <span className={`day-total day-total-${id.toLowerCase()} ${leader === id ? 'is-leading' : ''}`}>
-      {teams[id].name} <strong>{started ? formatTeamTotal(format, totals[id]) : '–'}</strong>
+      {teams[id].name} <strong>{started ? formatPoints(split[id]) : '–'}</strong>
     </span>
   )
 
@@ -33,7 +34,7 @@ export default function DayFormatBar({ tournament, day }) {
       <p>
         <strong>{label}</strong>
         <span>
-          Team totals · {complete ? 'final' : `better total wins ${points} points`}
+          Top {points} scores earn a point each{complete ? ' · final' : started ? ' · as it stands' : ''}
         </span>
       </p>
       <p className="day-totals">

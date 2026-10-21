@@ -4,8 +4,8 @@
 // them out from the hole-by-hole results.
 
 import { computeMatchState, STATUS } from './scoring.js'
-import { formatForDay, formatOf, isTeamTotalFormat, TEAM_TOTAL_DAY_POINTS } from './formats.js'
-import { computePairing, dayTeamTotals, formatRoundScore } from './strokeplay.js'
+import { formatForDay, formatOf, isTeamTotalFormat } from './formats.js'
+import { computePairing, dayCupPoints, formatRoundScore } from './strokeplay.js'
 
 export { STATUS }
 
@@ -76,7 +76,7 @@ export function describeMatch(match, holesPerMatch = 18) {
 //   Match formats: as describeMatch.
 //   Stableford / stroke play: each player's score ("18 pts" or "+3"),
 //   side = whoever is doing better in the pairing; no points per pairing
-//   (the day is decided on team totals).
+//   (the day's cup points go to the top 6 individual scores).
 export function matchView(t, match) {
   if (formatOf(t, match).kind === 'MATCH') {
     return { kind: 'MATCH', ...describeMatch(match, t.holesPerMatch) }
@@ -103,22 +103,16 @@ export function matchView(t, match) {
 
 export const matchStatus = (t, match) => matchView(t, match).status
 
-const share = (leader, points) =>
-  leader
-    ? { HOME: leader === 'HOME' ? points : 0, CHALLENGERS: leader === 'CHALLENGERS' ? points : 0 }
-    : { HOME: points / 2, CHALLENGERS: points / 2 }
-
-// Points only come from finished matches, and from team-total days once
-// every pairing has finished.
+// Points only come from finished matches, and from Stableford / stroke play
+// days (top 6 scores earn a point each) once every pairing has finished.
 export function getTeamPoints(t) {
   const totals = { HOME: 0, CHALLENGERS: 0 }
   for (const day of t.days) {
     if (isTeamTotalFormat(formatForDay(t, day))) {
-      const result = dayTeamTotals(t, day)
+      const result = dayCupPoints(t, day)
       if (result.complete) {
-        const won = share(result.leader, TEAM_TOTAL_DAY_POINTS)
-        totals.HOME += won.HOME
-        totals.CHALLENGERS += won.CHALLENGERS
+        totals.HOME += result.points.HOME
+        totals.CHALLENGERS += result.points.CHALLENGERS
       }
       continue
     }
@@ -134,18 +128,17 @@ export function getTeamPoints(t) {
 }
 
 // Projected points: finished results, plus live matches as they currently
-// stand (leader gets 1, all square 0.5 each), plus team-total days in
-// progress (current leader gets the day's points, level shares them).
+// stand (leader gets 1, all square 0.5 each), plus Stableford / stroke play
+// days in progress (the top-6 split as things stand).
 // Unstarted matches add nothing. This is an indication only, never awarded.
 export function getProjectedPoints(t) {
   const totals = getTeamPoints(t)
   for (const day of t.days) {
     if (isTeamTotalFormat(formatForDay(t, day))) {
-      const result = dayTeamTotals(t, day)
+      const result = dayCupPoints(t, day)
       if (result.started && !result.complete) {
-        const projected = share(result.leader, TEAM_TOTAL_DAY_POINTS)
-        totals.HOME += projected.HOME
-        totals.CHALLENGERS += projected.CHALLENGERS
+        totals.HOME += result.points.HOME
+        totals.CHALLENGERS += result.points.CHALLENGERS
       }
       continue
     }

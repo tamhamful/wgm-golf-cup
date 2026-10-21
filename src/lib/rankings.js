@@ -11,7 +11,7 @@
 import { computeMatchState, STATUS } from './scoring.js'
 import { describeMatch } from './tournament.js'
 import { formatOf, formatForDay, sidePlayerIds } from './formats.js'
-import { computePairing } from './strokeplay.js'
+import { computePairing, dayCupPoints } from './strokeplay.js'
 
 // Gives shared ranks to rows that are level on `same`.
 function withRanks(sorted, same) {
@@ -69,8 +69,10 @@ export function getPlayerRankings(t) {
 
 // Individual table for a Stableford / stroke play day: most points, or
 // lowest net score to par. Players who haven't started go to the bottom.
+// cupPoints: the cup points each player is earning (top 6 get one each).
 export function getDayRankings(t, day) {
   const format = formatForDay(t, day)
+  const { byPlayer } = dayCupPoints(t, day)
   const rows = []
   for (const match of t.matches.filter((m) => m.day === day)) {
     const pairing = computePairing(t, match)
@@ -81,6 +83,7 @@ export function getDayRankings(t, day) {
         player,
         holesPlayed: pairing.holesPlayed,
         finished: pairing.status === STATUS.COMPLETE,
+        cupPoints: byPlayer.get(player.id) ?? 0,
         ...pairing.round[side],
       })
     }

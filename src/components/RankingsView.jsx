@@ -60,12 +60,14 @@ function MatchPlayTable({ rankings, teams, currentPlayerId }) {
   )
 }
 
-// Stableford / stroke play day: individual table for that day.
+// Stableford / stroke play day: individual table for that day. The top 6
+// (highlighted, above the cut line) each earn a cup point for their team.
 function DayTable({ tournament, day, currentPlayerId }) {
   const format = formatForDay(tournament, day)
   const rows = getDayRankings(tournament, day)
   const { teams } = tournament
   const stableford = format === 'STABLEFORD'
+  const lastScoring = rows.reduce((last, row, i) => (row.cupPoints > 0 ? i : last), -1)
 
   return (
     <div className="rankings">
@@ -77,15 +79,17 @@ function DayTable({ tournament, day, currentPlayerId }) {
         <span className="rankings-num">Hcp</span>
       </div>
       <ol className="rankings-list">
-        {rows.map((row) => {
+        {rows.flatMap((row, i) => {
           const team = teams[row.player.teamId]
           const started = row.holesPlayed > 0
           const score = started ? (stableford ? row.points : formatRoundScore(format, row)) : '–'
-          return (
+          const cupText =
+            row.cupPoints === 1 ? ', earning a cup point' : row.cupPoints > 0 ? `, sharing a cup point (${formatPoints(row.cupPoints)})` : ''
+          const line = (
             <li
               key={row.player.id}
-              className={`rankings-row ${row.player.id === currentPlayerId ? 'is-you' : ''}`}
-              aria-label={`${started ? `${row.tied ? 'Joint ' : ''}${row.rank}: ` : ''}${row.player.name}, ${team.name}. ${started ? `${score}${stableford ? ' points' : ' net'} through ${row.holesPlayed}` : 'not started'}`}
+              className={`rankings-row ${row.player.id === currentPlayerId ? 'is-you' : ''} ${row.cupPoints > 0 ? 'is-top' : ''}`}
+              aria-label={`${started ? `${row.tied ? 'Joint ' : ''}${row.rank}: ` : ''}${row.player.name}, ${team.name}. ${started ? `${score}${stableford ? ' points' : ' net'} through ${row.holesPlayed}${cupText}` : 'not started'}`}
             >
               <span className="rankings-rank" aria-hidden="true">
                 {started ? rankText(row) : ''}
@@ -102,6 +106,13 @@ function DayTable({ tournament, day, currentPlayerId }) {
               </span>
             </li>
           )
+          if (i !== lastScoring) return [line]
+          return [
+            line,
+            <li key="cut" className="rankings-cut" aria-hidden="true">
+              ▲ Top 6 earn a cup point
+            </li>,
+          ]
         })}
       </ol>
     </div>

@@ -117,7 +117,7 @@ export default function StrokeScorecard({ tournament, match, home, challenger, a
   const isCorrection = selectedHole !== null
 
   const confirmFinished = (what) =>
-    !isComplete || window.confirm(`This round is finished. ${what} may change the day's team total. Continue?`)
+    !isComplete || window.confirm(`This round is finished. ${what} may change the day's top 6. Continue?`)
 
   const save = (entry) => {
     if (isCorrection && !confirmFinished(`Changing hole ${activeHole}`)) return
@@ -212,7 +212,7 @@ export default function StrokeScorecard({ tournament, match, home, challenger, a
           {pairing.status === STATUS.NOT_STARTED
             ? 'Enter hole 1 to start'
             : isComplete
-              ? 'Final · counts towards the team total'
+              ? 'Final · top 6 scores earn a cup point'
               : `Through ${pairing.holesPlayed}`}
         </span>
       </div>

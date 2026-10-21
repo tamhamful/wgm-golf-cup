@@ -39,8 +39,8 @@ const FORMAT_HELP = {
   SINGLES: '6 matches, one against one. A point per match.',
   FOURBALL: '3 matches, pairs. Each plays their own ball; best score on the hole counts. A point per match.',
   FOURSOMES: '3 matches, pairs. Partners take alternate shots with one ball. A point per match.',
-  STABLEFORD: '6 pairings. Gross scores with full handicap; the better team points total wins 6 points.',
-  STROKE: '6 pairings. Gross scores with full handicap; the lower team net total wins 6 points.',
+  STABLEFORD: '6 pairings. Gross scores with full handicap. The top 6 Stableford scores each earn a point for their team.',
+  STROKE: '6 pairings. Gross scores with full handicap. The top 6 net scores each earn a point for their team.',
 }
 
 export default function AdminPairings({ tournament, run }) {

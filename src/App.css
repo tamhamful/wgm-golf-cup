@@ -2094,3 +2094,19 @@ button.match-row {
     flex: 1 1 60%;
   }
 }
+
+/* Stableford / stroke play day: top 6 earn a cup point */
+.rankings-row.is-top {
+  box-shadow: inset 3px 0 0 var(--wgm-navy);
+}
+
+.rankings-cut {
+  padding: 6px 0;
+  border-bottom: 2px dashed var(--wgm-navy);
+  color: var(--wgm-navy);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}

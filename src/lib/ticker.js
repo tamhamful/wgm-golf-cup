@@ -9,7 +9,7 @@
 import { computeMatchState, STATUS } from './scoring.js'
 import { formatPoints, getProjectedPoints, getTeamPoints } from './tournament.js'
 import { FORMATS, formatForDay, formatOf, isTeamTotalFormat, sidePlayerIds, TEAM_TOTAL_DAY_POINTS } from './formats.js'
-import { dayTeamTotals, formatTeamTotal } from './strokeplay.js'
+import { dayCupPoints } from './strokeplay.js'
 
 const HOLE_STREAK = 3 // holes in a row before it's news
 const MATCH_STREAK = 3 // matches in a row before it's news
@@ -230,23 +230,20 @@ function teamEvents(t) {
       )
       if (dayComplete && !daysDone.has(match.day) && days.includes(match.day)) {
         daysDone.add(match.day)
-        // Stableford / stroke play day: announce who won the day on totals.
+        // Stableford / stroke play day: how the top-6 cup points split.
         const format = formatForDay(t, match.day)
         if (isTeamTotalFormat(format)) {
-          const day = dayTeamTotals(cur, match.day)
+          const day = dayCupPoints(cur, match.day)
           const label = `Day ${match.day} ${FORMATS[format].short}`
-          const totals = (first) => {
-            const second = first === 'HOME' ? 'CHALLENGERS' : 'HOME'
-            return `${formatTeamTotal(format, day.totals[first])} – ${formatTeamTotal(format, day.totals[second])}`
-          }
+          const top = leaderOf(day.points)
           events.push({
             ...at,
             id: `day-result-${match.day}`,
             kind: 'day-result',
-            team: day.leader,
-            text: day.leader
-              ? `${teams[day.leader].name} win the ${label}, ${totals(day.leader)}: ${TEAM_TOTAL_DAY_POINTS} points`
-              : `${label} tied, ${totals('HOME')}: ${TEAM_TOTAL_DAY_POINTS / 2} points each`,
+            team: top,
+            text: top
+              ? `${teams[top].name} take ${formatPoints(day.points[top])} of the ${TEAM_TOTAL_DAY_POINTS} points on the ${label} (${score(day.points, top)})`
+              : `${label} points shared ${score(day.points)}`,
           })
         }
         events.push({
