@@ -175,5 +175,5 @@ test('only an admin can clear all scores; it removes the demo label', () => {
 test('cannot score a match with a player missing', () => {
   const t = demo()
   t.matches.find((m) => m.id === 'm5').homePlayerId = null
-  assert.throws(() => recordHole(t, 'm5', 1, 'HOME', ADMIN), /Both players/)
+  assert.throws(() => recordHole(t, 'm5', 1, 'HOME', ADMIN), /All the players/)
 })

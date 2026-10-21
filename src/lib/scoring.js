@@ -1,9 +1,14 @@
 // Match-play scoring engine.
 //
-// The ONLY thing stored for a match is who won each hole:
-//   match.holes = ['HOME', 'HALVED', 'CHALLENGERS', ...]  (index 0 = hole 1)
-// Everything else (position, holes played, finished early, result, winner)
-// is calculated from that list here, so it can never get out of step.
+// The ONLY thing stored for a match is one entry per hole:
+//   match formats:  who won it – ['HOME', 'HALVED', 'CHALLENGERS', ...]
+//   Stableford / stroke play: both gross scores – ['5:4', 'P:6', ...]
+//   (index 0 = hole 1). Everything else is calculated from that list, so it
+//   can never get out of step. Stableford / stroke play maths is in
+//   strokeplay.js; a gross-score hole never ends a pairing early.
+
+import { formatOf, matchIsReady, sidePlayerIds } from './formats.js'
+import { decodeHole, isValidGross } from './strokeplay.js'
 
 export const STATUS = {
   NOT_STARTED: 'NOT_STARTED',
@@ -30,7 +35,7 @@ export function computeMatchState(holes = [], holesPerMatch = 18) {
     played += 1
     if (result === HOLE_RESULT.HOME) home += 1
     else if (result === HOLE_RESULT.CHALLENGERS) challengers += 1
-    else halved += 1
+    else halved += 1 // (gross-score holes land here and never end a pairing early)
 
     // The match is over once a player is further ahead than holes remaining.
     if (Math.abs(home - challengers) > holesPerMatch - played) {
@@ -71,6 +76,8 @@ export function computeMatchState(holes = [], holesPerMatch = 18) {
   }
 }
 
+// Works for every format: gross-score holes never finish a pairing early,
+// so it is complete once every hole has an entry.
 export function getMatchStatus(match, holesPerMatch) {
   return computeMatchState(match.holes, holesPerMatch).status
 }
@@ -80,7 +87,7 @@ export function getMatchStatus(match, holesPerMatch) {
 export function getGroupPlayerIds(t, groupId) {
   return t.matches
     .filter((m) => m.groupId === groupId)
-    .flatMap((m) => [m.homePlayerId, m.challengerPlayerId])
+    .flatMap((m) => [...sidePlayerIds(m, 'HOME'), ...sidePlayerIds(m, 'CHALLENGERS')])
     .filter(Boolean)
 }
 
@@ -115,15 +122,28 @@ function checkCanScore(t, match, actor) {
   }
 }
 
-// Records (or corrects) the result of one hole.
+// Is this a valid hole entry for the match's format?
+export function isValidHoleEntry(t, match, result) {
+  if (formatOf(t, match).kind === 'MATCH') return Object.values(HOLE_RESULT).includes(result)
+  if (!/^(\d{1,2}|P):(\d{1,2}|P)$/.test(String(result))) return false
+  const scores = decodeHole(result)
+  return isValidGross(scores.HOME) && isValidGross(scores.CHALLENGERS)
+}
+
+// Records (or corrects) one hole: who won it (match formats), or both
+// players' gross scores as "5:4" (Stableford / stroke play).
 export function recordHole(t, matchId, holeNumber, result, actor) {
   const match = getMatch(t, matchId)
   checkCanScore(t, match, actor)
-  if (!match.homePlayerId || !match.challengerPlayerId) {
-    throw new Error('Both players must be chosen before scores can be entered.')
+  if (!matchIsReady(t, match)) {
+    throw new Error('All the players must be chosen before scores can be entered.')
   }
-  if (!Object.values(HOLE_RESULT).includes(result)) {
-    throw new Error('Choose who won the hole, or halved.')
+  if (!isValidHoleEntry(t, match, result)) {
+    throw new Error(
+      formatOf(t, match).kind === 'MATCH'
+        ? 'Choose who won the hole, or halved.'
+        : 'Enter a score from 1 to 20 for each player, or a pick-up.',
+    )
   }
 
   const state = computeMatchState(match.holes, t.holesPerMatch)

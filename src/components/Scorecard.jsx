@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { computeMatchState, HOLE_RESULT, STATUS } from '../lib/scoring.js'
+import { formatOf } from '../lib/formats.js'
 
 const initials = (name) =>
   name
@@ -10,7 +11,7 @@ const initials = (name) =>
     .slice(0, 3)
 
 function StatusLine({ state, home, challenger }) {
-  const leaderName = state.leader === 'HOME' ? home.name : challenger.name
+  const leaderName = state.leader === 'HOME' ? (home.shortName ?? home.name) : (challenger.shortName ?? challenger.name)
   const sideClass = state.leader ? `is-${state.leader.toLowerCase()}` : ''
 
   if (state.status === STATUS.NOT_STARTED) {
@@ -106,10 +107,10 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
     let mark = ''
     let cls = ''
     if (result === HOLE_RESULT.HOME) {
-      mark = initials(home.name)
+      mark = home.initials ?? initials(home.name)
       cls = 'is-home'
     } else if (result === HOLE_RESULT.CHALLENGERS) {
-      mark = initials(challenger.name)
+      mark = challenger.initials ?? initials(challenger.name)
       cls = 'is-challengers'
     } else if (result === HOLE_RESULT.HALVED) {
       mark = '½'
@@ -145,7 +146,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
       </button>
 
       <p className="scorecard-meta">
-        Match {match.number} · Day {match.day}
+        Match {match.number} · Day {match.day} · {formatOf(tournament, match).label}
       </p>
 
       <div className="scorecard-players">
@@ -176,7 +177,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
           </h2>
           <div className="hole-entry-buttons">
             <button type="button" className="result-button is-home" onClick={() => record(HOLE_RESULT.HOME)}>
-              {home.name}
+              {home.shortName ?? home.name}
             </button>
             <button type="button" className="result-button is-halved" onClick={() => record(HOLE_RESULT.HALVED)}>
               Halved
@@ -186,7 +187,7 @@ export default function Scorecard({ tournament, match, home, challenger, actor, 
               className="result-button is-challengers"
               onClick={() => record(HOLE_RESULT.CHALLENGERS)}
             >
-              {challenger.name}
+              {challenger.shortName ?? challenger.name}
             </button>
           </div>
           <div className="hole-entry-actions">

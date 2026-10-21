@@ -30,8 +30,8 @@ function ScoreBar({ teams, points, projected, totalPoints }) {
   )
 }
 
-export default function Scoreboard({ teams, points, projected, target, totalMatches }) {
-  const remaining = totalMatches - points.HOME - points.CHALLENGERS
+export default function Scoreboard({ teams, points, projected, target, totalPoints }) {
+  const remaining = totalPoints - points.HOME - points.CHALLENGERS
 
   return (
     <section className="scoreboard" aria-label="Overall team score">
@@ -44,10 +44,10 @@ export default function Scoreboard({ teams, points, projected, target, totalMatc
         <TeamScore team={teams.CHALLENGERS} points={points.CHALLENGERS} align="challengers" />
       </div>
 
-      <ScoreBar teams={teams} points={points} projected={projected} totalPoints={totalMatches} />
+      <ScoreBar teams={teams} points={points} projected={projected} totalPoints={totalPoints} />
       <div className="score-bar-scale" aria-hidden="true">
         <span>0</span>
-        <span>{formatPoints(totalMatches / 2)}</span>
+        <span>{formatPoints(totalPoints / 2)}</span>
         <span>0</span>
       </div>
 

@@ -7,6 +7,8 @@ import {
   renameTeam,
   setTeamRole,
   TEAM_ROLES,
+  formatHandicap,
+  setPlayerHandicap,
 } from '../../lib/admin.js'
 import EditableText from './EditableText.jsx'
 
@@ -145,7 +147,7 @@ export default function AdminTeams({ tournament, run, confirm }) {
               </div>
 
               <div className="admin-team-count">
-                <span>{teamPlayers.length} players</span>
+                <span>{teamPlayers.length} players · Hcp = handicap (for Stableford / stroke play)</span>
                 {!sizeOk && <span className="warning-text">Should be {PLAYERS_PER_TEAM}</span>}
               </div>
 
@@ -153,6 +155,14 @@ export default function AdminTeams({ tournament, run, confirm }) {
                 {teamPlayers.map((player) => (
                   <li key={player.id} className="admin-player">
                     {nameField(player)}
+                    <EditableText
+                      className="handicap-input"
+                      label={`${player.name} handicap`}
+                      placeholder="Hcp"
+                      inputMode="text"
+                      value={formatHandicap(player.handicap)}
+                      onSave={(value) => run(setPlayerHandicap, player.id, value)}
+                    />
                     <select
                       className="select-input team-select"
                       aria-label={`${player.name} team`}

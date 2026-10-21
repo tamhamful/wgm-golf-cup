@@ -108,7 +108,10 @@ returns boolean language sql immutable as $$
     select 1
     from jsonb_array_elements(p_setup -> 'matches') g, target
     where g ->> 'groupId' = target.group_id
-      and p_player_id in (g ->> 'homePlayerId', g ->> 'challengerPlayerId')
+      and p_player_id in (
+        g ->> 'homePlayerId', g ->> 'challengerPlayerId',
+        g ->> 'homePartnerId', g ->> 'challengerPartnerId'  -- pairs formats
+      )
   );
 $$;
 
@@ -158,6 +161,7 @@ declare
   after_prog record;
   new_holes text[];
   new_times timestamptz[];
+  fmt text;
 begin
   select setup into s from public.tournament where id = 1;
   hpm := coalesce((s ->> 'holesPerMatch')::int, 18);
@@ -167,10 +171,21 @@ begin
   if not admin and not public.player_in_group(s, p_match_id, p_player_id) then
     raise exception 'Only the players in this group, or an admin, can enter scores for this match.';
   end if;
-  if coalesce(m ->> 'homePlayerId', '') = '' or coalesce(m ->> 'challengerPlayerId', '') = '' then
-    raise exception 'Both players must be chosen before scores can be entered.';
+  -- The day's format decides what a hole entry looks like (see src/lib/formats.js).
+  fmt := coalesce(s -> 'dayFormats' ->> (m ->> 'day'), 'SINGLES');
+
+  if coalesce(m ->> 'homePlayerId', '') = '' or coalesce(m ->> 'challengerPlayerId', '') = ''
+     or (fmt in ('FOURBALL', 'FOURSOMES')
+         and (coalesce(m ->> 'homePartnerId', '') = '' or coalesce(m ->> 'challengerPartnerId', '') = '')) then
+    raise exception 'All the players must be chosen before scores can be entered.';
   end if;
-  if p_result not in ('HOME', 'CHALLENGERS', 'HALVED') then
+
+  if fmt in ('STABLEFORD', 'STROKE') then
+    -- Both gross scores, e.g. '5:4'; P = picked up.
+    if p_result !~ '^([1-9]|1[0-9]|20|P):([1-9]|1[0-9]|20|P)$' then
+      raise exception 'Enter a score from 1 to 20 for each player, or a pick-up.';
+    end if;
+  elsif p_result not in ('HOME', 'CHALLENGERS', 'HALVED') then
     raise exception 'Choose who won the hole, or halved.';
   end if;
 

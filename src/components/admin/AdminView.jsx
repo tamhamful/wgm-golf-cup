@@ -3,10 +3,11 @@ import AdminTeams from './AdminTeams.jsx'
 import AdminPairings from './AdminPairings.jsx'
 import AdminSettings from './AdminSettings.jsx'
 import AdminTicker from './AdminTicker.jsx'
+import AdminCourse from './AdminCourse.jsx'
 import DaySelector from '../DaySelector.jsx'
 import { setCurrentDay } from '../../lib/admin.js'
 
-const SECTIONS = ['Teams & players', 'Pairings', 'Ticker', 'Settings']
+const SECTIONS = ['Teams & players', 'Pairings', 'Course', 'Ticker', 'Settings']
 
 export default function AdminView({
   tournament,
@@ -82,6 +83,7 @@ export default function AdminView({
         <AdminTeams tournament={tournament} run={run} confirm={confirm} />
       )}
       {section === 'Pairings' && <AdminPairings tournament={tournament} run={run} />}
+      {section === 'Course' && <AdminCourse tournament={tournament} run={run} />}
       {section === 'Ticker' && (
         <AdminTicker notices={notices} onPost={onPostNotice} onDelete={onDeleteNotice} />
       )}

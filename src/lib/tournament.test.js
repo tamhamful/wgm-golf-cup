@@ -26,30 +26,30 @@ test('demo data shows the expected positions', () => {
 })
 
 test('only completed matches award points', () => {
-  const { matches } = createDemoTournament()
-  assert.deepEqual(getTeamPoints(matches), { HOME: 1, CHALLENGERS: 0 })
+  const t = createDemoTournament()
+  assert.deepEqual(getTeamPoints(t), { HOME: 1, CHALLENGERS: 0 })
 })
 
 test('halved match gives half a point each, and totals equal completed matches', () => {
   let t = createDemoTournament()
   t = withHoles(t, 'm4', 'HC================') // halved
   t = withHoles(t, 'm5', 'CCCCCCCCCC') // Challengers 10&8
-  const points = getTeamPoints(t.matches)
+  const points = getTeamPoints(t)
   assert.deepEqual(points, { HOME: 1.5, CHALLENGERS: 1.5 })
   assert.equal(points.HOME + points.CHALLENGERS, 3) // 3 completed matches
 })
 
 test('projected points add live matches as they stand', () => {
-  const { matches } = createDemoTournament()
-  assert.deepEqual(getProjectedPoints(matches), { HOME: 2.5, CHALLENGERS: 1.5 })
+  const t = createDemoTournament()
+  assert.deepEqual(getProjectedPoints(t), { HOME: 2.5, CHALLENGERS: 1.5 })
 })
 
 test('tournament status follows the admin-set current day', () => {
   const t = createDemoTournament()
-  assert.equal(getTournamentStatus(t.matches, t.days, 18, 1).label, 'Day 1 in progress')
-  assert.equal(getTournamentStatus(t.matches, t.days, 18, 2).label, 'Day 2 not started')
+  assert.equal(getTournamentStatus(t, 1).label, 'Day 1 in progress')
+  assert.equal(getTournamentStatus(t, 2).label, 'Day 2 not started')
   for (const m of t.matches) m.holes = []
-  assert.equal(getTournamentStatus(t.matches, t.days, 18, 1).label, 'Not started')
+  assert.equal(getTournamentStatus(t, 1).label, 'Not started')
   for (const m of t.matches) m.holes = Array(10).fill('HOME')
-  assert.equal(getTournamentStatus(t.matches, t.days, 18, 3).label, 'Tournament complete')
+  assert.equal(getTournamentStatus(t, 3).label, 'Tournament complete')
 })

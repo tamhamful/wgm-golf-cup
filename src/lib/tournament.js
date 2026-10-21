@@ -3,7 +3,9 @@
 // Match positions come from the scoring engine (scoring.js), which works
 // them out from the hole-by-hole results.
 
-import { computeMatchState, getMatchStatus, STATUS } from './scoring.js'
+import { computeMatchState, STATUS } from './scoring.js'
+import { formatForDay, formatOf, isTeamTotalFormat, TEAM_TOTAL_DAY_POINTS } from './formats.js'
+import { computePairing, dayTeamTotals, formatRoundScore } from './strokeplay.js'
 
 export { STATUS }
 
@@ -70,41 +72,102 @@ export function describeMatch(match, holesPerMatch = 18) {
   }
 }
 
-// Points only come from completed matches.
-export function getTeamPoints(matches, holesPerMatch) {
+// What a leaderboard row shows, for any format.
+//   Match formats: as describeMatch.
+//   Stableford / stroke play: each player's score ("18 pts" or "+3"),
+//   side = whoever is doing better in the pairing; no points per pairing
+//   (the day is decided on team totals).
+export function matchView(t, match) {
+  if (formatOf(t, match).kind === 'MATCH') {
+    return { kind: 'MATCH', ...describeMatch(match, t.holesPerMatch) }
+  }
+  const p = computePairing(t, match)
+  let detail = 'NOT STARTED'
+  if (p.status === STATUS.LIVE) detail = `${p.holesPlayed} ${p.holesPlayed === 1 ? 'HOLE' : 'HOLES'}`
+  if (p.status === STATUS.COMPLETE) detail = 'FINAL'
+  return {
+    kind: 'TEAM_TOTAL',
+    format: p.format,
+    status: p.status,
+    side: p.better,
+    holesPlayed: p.holesPlayed,
+    detail,
+    scores: {
+      HOME: formatRoundScore(p.format, p.round.HOME),
+      CHALLENGERS: formatRoundScore(p.format, p.round.CHALLENGERS),
+    },
+    round: p.round,
+    points: null,
+  }
+}
+
+export const matchStatus = (t, match) => matchView(t, match).status
+
+const share = (leader, points) =>
+  leader
+    ? { HOME: leader === 'HOME' ? points : 0, CHALLENGERS: leader === 'CHALLENGERS' ? points : 0 }
+    : { HOME: points / 2, CHALLENGERS: points / 2 }
+
+// Points only come from finished matches, and from team-total days once
+// every pairing has finished.
+export function getTeamPoints(t) {
   const totals = { HOME: 0, CHALLENGERS: 0 }
-  for (const match of matches) {
-    const { points } = describeMatch(match, holesPerMatch)
-    if (points) {
-      totals.HOME += points.HOME
-      totals.CHALLENGERS += points.CHALLENGERS
+  for (const day of t.days) {
+    if (isTeamTotalFormat(formatForDay(t, day))) {
+      const result = dayTeamTotals(t, day)
+      if (result.complete) {
+        const won = share(result.leader, TEAM_TOTAL_DAY_POINTS)
+        totals.HOME += won.HOME
+        totals.CHALLENGERS += won.CHALLENGERS
+      }
+      continue
+    }
+    for (const match of t.matches.filter((m) => m.day === day)) {
+      const { points } = describeMatch(match, t.holesPerMatch)
+      if (points) {
+        totals.HOME += points.HOME
+        totals.CHALLENGERS += points.CHALLENGERS
+      }
     }
   }
   return totals
 }
 
-// Projected points: completed matches as they finished, plus live matches
-// as they currently stand (leader gets 1, all square gets 0.5 each).
+// Projected points: finished results, plus live matches as they currently
+// stand (leader gets 1, all square 0.5 each), plus team-total days in
+// progress (current leader gets the day's points, level shares them).
 // Unstarted matches add nothing. This is an indication only, never awarded.
-export function getProjectedPoints(matches, holesPerMatch) {
-  const totals = getTeamPoints(matches, holesPerMatch)
-  for (const match of matches) {
-    const view = describeMatch(match, holesPerMatch)
-    if (view.status !== STATUS.LIVE) continue
-    if (view.side) {
-      totals[view.side] += 1
-    } else {
-      totals.HOME += 0.5
-      totals.CHALLENGERS += 0.5
+export function getProjectedPoints(t) {
+  const totals = getTeamPoints(t)
+  for (const day of t.days) {
+    if (isTeamTotalFormat(formatForDay(t, day))) {
+      const result = dayTeamTotals(t, day)
+      if (result.started && !result.complete) {
+        const projected = share(result.leader, TEAM_TOTAL_DAY_POINTS)
+        totals.HOME += projected.HOME
+        totals.CHALLENGERS += projected.CHALLENGERS
+      }
+      continue
+    }
+    for (const match of t.matches.filter((m) => m.day === day)) {
+      const view = describeMatch(match, t.holesPerMatch)
+      if (view.status !== STATUS.LIVE) continue
+      if (view.side) {
+        totals[view.side] += 1
+      } else {
+        totals.HOME += 0.5
+        totals.CHALLENGERS += 0.5
+      }
     }
   }
   return totals
 }
 
 // Header label, based on the day the admin has set as the current day.
-export function getTournamentStatus(matches, days, holesPerMatch, currentDay) {
+export function getTournamentStatus(t, currentDay) {
+  const { matches, days } = t
   const dayStatus = (day) => {
-    const statuses = matches.filter((m) => m.day === day).map((m) => getMatchStatus(m, holesPerMatch))
+    const statuses = matches.filter((m) => m.day === day).map((m) => matchStatus(t, m))
     if (statuses.every((s) => s === STATUS.COMPLETE)) return 'complete'
     if (statuses.every((s) => s === STATUS.NOT_STARTED)) return 'not-started'
     return 'in-progress'

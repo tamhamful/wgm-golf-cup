@@ -790,9 +790,9 @@
 
 .admin-sections {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 16px;
-  overflow-x: auto;
 }
 
 .admin-section-button {
@@ -1806,4 +1806,291 @@ button.match-row {
 .team-role .select-input {
   min-height: 38px;
   font-size: 14px;
+}
+
+/* ---------- Formats: day bar, pairs, gross-score entry ---------- */
+
+.day-format {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.day-format strong {
+  color: var(--wgm-navy);
+  font-size: 13px;
+}
+
+.day-format-team {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface-softer);
+}
+
+.day-format-team > p:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.day-totals {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.day-total strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-total-home strong {
+  color: #1b7396;
+}
+
+.day-total-challengers {
+  text-align: right;
+}
+
+.day-total-challengers strong {
+  color: var(--wgm-green);
+}
+
+.day-total.is-leading::after {
+  content: ' ◂';
+  font-size: 11px;
+}
+
+.day-total-challengers.is-leading::after {
+  content: '';
+}
+
+.day-total-challengers.is-leading::before {
+  content: '▸ ';
+  font-size: 11px;
+}
+
+/* Pairs: the two names one above the other */
+.match-pair {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.match-player-challengers .match-pair {
+  align-items: flex-end;
+}
+
+/* Stableford / stroke play rows: both players show their score */
+.match-row.is-team-total .match-player:not(.is-leading) .match-score {
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* Gross score entry */
+.score-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-left: 4px solid var(--wgm-blue);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.score-input.is-challengers {
+  border-left-color: var(--wgm-green);
+}
+
+.score-input-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.score-input-name span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.score-input-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.stepper {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-input-value {
+  min-width: 34px;
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.pickup {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pickup.is-on {
+  border-color: #b42318;
+  background: #fdecea;
+  color: #8a1c13;
+}
+
+.button.save-hole {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 4px;
+  background: var(--wgm-navy);
+  color: #fff;
+  font-size: 16px;
+}
+
+.stroke-cell .stroke-home,
+.stroke-cell .stroke-challengers {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.stroke-home {
+  color: #1b7396;
+}
+
+.stroke-challengers {
+  color: var(--wgm-green);
+}
+
+.stroke-cell.is-played {
+  background: var(--surface-softer);
+}
+
+/* Admin: format, pairs, handicaps, course */
+.day-format-setting {
+  margin-bottom: 14px;
+}
+
+.day-format-setting .settings-help {
+  margin-top: 6px;
+}
+
+.pairing-pair {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.text-input.handicap-input {
+  flex: 0 0 56px;
+  width: 56px;
+  min-height: 36px;
+  padding: 0 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.target-warning {
+  margin-top: 8px;
+}
+
+.course-table {
+  margin: 4px 0 14px;
+}
+
+.course-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.course-row.is-back-nine {
+  margin-top: 8px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+
+.course-head {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.course-hole {
+  font-weight: 700;
+  text-align: center;
+}
+
+.course-row .select-input {
+  min-height: 36px;
+}
+
+.select-input.is-duplicate {
+  border-color: #b42318;
+  background: #fdecea;
+}
+
+.course-totals {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 560px) {
+  .score-input {
+    flex-wrap: wrap;
+  }
+
+  .score-input-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pairing-row.is-pairs {
+    grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .admin-team .admin-player {
+    flex-wrap: wrap;
+  }
+
+  .admin-team .admin-player .text-input:not(.handicap-input) {
+    flex: 1 1 60%;
+  }
 }

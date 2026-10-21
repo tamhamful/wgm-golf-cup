@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 // A text box that saves when you press Enter or move away from it.
 // If the save is refused (e.g. blank name), it goes back to the saved value.
-export default function EditableText({ id, value, onSave, label, className = '' }) {
+export default function EditableText({ id, value, onSave, label, className = '', placeholder, inputMode }) {
   const [draft, setDraft] = useState(value)
   const [lastValue, setLastValue] = useState(value)
 
@@ -25,6 +25,8 @@ export default function EditableText({ id, value, onSave, label, className = '' 
       type="text"
       value={draft}
       aria-label={label}
+      placeholder={placeholder}
+      inputMode={inputMode}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {

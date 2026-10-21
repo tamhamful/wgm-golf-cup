@@ -8,6 +8,8 @@
 
 import { computeMatchState, STATUS } from './scoring.js'
 import { formatPoints, getProjectedPoints, getTeamPoints } from './tournament.js'
+import { FORMATS, formatForDay, formatOf, isTeamTotalFormat, sidePlayerIds, TEAM_TOTAL_DAY_POINTS } from './formats.js'
+import { dayTeamTotals, formatTeamTotal } from './strokeplay.js'
 
 const HOLE_STREAK = 3 // holes in a row before it's news
 const MATCH_STREAK = 3 // matches in a row before it's news
@@ -30,8 +32,9 @@ const timeValue = (time) => (time ? new Date(time).getTime() : 0)
 function matchEvents(t, match, playerName) {
   const { holesPerMatch, teams } = t
   const times = match.holeTimes ?? []
-  const home = playerName(match.homePlayerId)
-  const challenger = playerName(match.challengerPlayerId)
+  // One name, or both names of a pair ("Tom Hamilton & Iain Ross").
+  const home = sidePlayerIds(match, 'HOME').map(playerName).join(' & ')
+  const challenger = sidePlayerIds(match, 'CHALLENGERS').map(playerName).join(' & ')
   const nameFor = (side) => (side === 'HOME' ? home : challenger)
   const label = `Match ${match.number}`
   const played = computeMatchState(match.holes, holesPerMatch).holesPlayed
@@ -150,6 +153,8 @@ function teamEvents(t) {
     count[step.matchId] = step.hole
     const after = statusOf(matches.find((m) => m.id === step.matchId))
     const current = snapshot()
+    const cur = { ...t, matches: current }
+    const stepMatch = matches.find((m) => m.id === step.matchId)
     const at = { time: step.time }
     // Short score with the named team's points first, e.g. "5 – 4".
     const score = (p, first = 'HOME') => {
@@ -159,7 +164,11 @@ function teamEvents(t) {
 
     // A match has just finished
     if (before.status !== STATUS.COMPLETE && after.status === STATUS.COMPLETE) {
-      if (after.winner && after.winner === streakTeam) streak += 1
+      // Match streaks only count head-to-head match results; Stableford /
+      // stroke play pairings don't win or lose on their own.
+      if (formatOf(t, stepMatch).kind !== 'MATCH') {
+        // no streak change
+      } else if (after.winner && after.winner === streakTeam) streak += 1
       else if (after.winner) {
         streakTeam = after.winner
         streak = 1
@@ -167,7 +176,7 @@ function teamEvents(t) {
         streakTeam = null
         streak = 0
       }
-      if (streak >= MATCH_STREAK) {
+      if (formatOf(t, stepMatch).kind === 'MATCH' && streak >= MATCH_STREAK) {
         events.push({
           ...at,
           id: `match-streak-${step.matchId}`,
@@ -177,7 +186,7 @@ function teamEvents(t) {
         })
       }
 
-      const newPoints = getTeamPoints(current, holesPerMatch)
+      const newPoints = getTeamPoints(cur)
       const newLeader = leaderOf(newPoints)
       if (newLeader !== leader) {
         events.push({
@@ -221,6 +230,25 @@ function teamEvents(t) {
       )
       if (dayComplete && !daysDone.has(match.day) && days.includes(match.day)) {
         daysDone.add(match.day)
+        // Stableford / stroke play day: announce who won the day on totals.
+        const format = formatForDay(t, match.day)
+        if (isTeamTotalFormat(format)) {
+          const day = dayTeamTotals(cur, match.day)
+          const label = `Day ${match.day} ${FORMATS[format].short}`
+          const totals = (first) => {
+            const second = first === 'HOME' ? 'CHALLENGERS' : 'HOME'
+            return `${formatTeamTotal(format, day.totals[first])} – ${formatTeamTotal(format, day.totals[second])}`
+          }
+          events.push({
+            ...at,
+            id: `day-result-${match.day}`,
+            kind: 'day-result',
+            team: day.leader,
+            text: day.leader
+              ? `${teams[day.leader].name} win the ${label}, ${totals(day.leader)}: ${TEAM_TOTAL_DAY_POINTS} points`
+              : `${label} tied, ${totals('HOME')}: ${TEAM_TOTAL_DAY_POINTS / 2} points each`,
+          })
+        }
         events.push({
           ...at,
           id: `day-${match.day}`,
@@ -237,7 +265,7 @@ function teamEvents(t) {
 
     // Projection swings: only when a team moves at least a point clear in the
     // projection (small flips back and forth aren't news).
-    const projected = getProjectedPoints(current, holesPerMatch)
+    const projected = getProjectedPoints(cur)
     const projectedTop = leaderOf(projected)
     const projectedText = score(projected, projectedTop ?? 'HOME')
     const projectedGap = Math.abs(projected.HOME - projected.CHALLENGERS)
@@ -272,7 +300,8 @@ export function buildTickerEvents(t, notices = []) {
   const playerName = (id) => names[id] ?? 'TBC'
 
   const events = [
-    ...t.matches.flatMap((m) => matchEvents(t, m, playerName)),
+    // Hole-by-hole match news only applies to match formats.
+    ...t.matches.filter((m) => formatOf(t, m).kind === 'MATCH').flatMap((m) => matchEvents(t, m, playerName)),
     ...teamEvents(t),
     ...notices.map((n) => ({
       id: `notice-${n.id}`,

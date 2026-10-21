@@ -20,6 +20,9 @@ import Ticker from './components/Ticker.jsx'
 import { buildTickerEvents } from './lib/ticker.js'
 import { getPlayerRankings } from './lib/rankings.js'
 import RankingsView from './components/RankingsView.jsx'
+import DayFormatBar from './components/DayFormatBar.jsx'
+import StrokeScorecard from './components/StrokeScorecard.jsx'
+import { formatOf, matchIsReady, sidePlayerIds, totalPointsAvailable } from './lib/formats.js'
 
 const TABS = ['Leaderboard', 'Rankings', 'Players']
 
@@ -71,7 +74,7 @@ function ConnectedApp() {
 
 function TournamentApp({ data, admin }) {
   const { tournament, notices, apply, scoring, syncError, dismissSyncError } = data
-  const { teams, players, matches, days, targetPoints, holesPerMatch } = tournament
+  const { teams, players, matches, days, targetPoints } = tournament
   const [currentPlayerId, setCurrentPlayerId] = useCurrentPlayer()
 
   const playersById = useMemo(
@@ -79,10 +82,10 @@ function TournamentApp({ data, admin }) {
     [players],
   )
   const tickerEvents = useMemo(() => buildTickerEvents(tournament, notices), [tournament, notices])
-  const points = getTeamPoints(matches, holesPerMatch)
-  const projected = getProjectedPoints(matches, holesPerMatch)
+  const points = getTeamPoints(tournament)
+  const projected = getProjectedPoints(tournament)
   const currentDay = tournament.currentDay ?? days[0]
-  const status = getTournamentStatus(matches, days, holesPerMatch, currentDay)
+  const status = getTournamentStatus(tournament, currentDay)
 
   // Which screen is showing. Each change is a step in the phone's history,
   // so its back button returns to the previous screen.
@@ -117,10 +120,21 @@ function TournamentApp({ data, admin }) {
   const showDays = tab === 'Leaderboard'
 
   // Scoring: only the four players in a match's group, or an admin, can open it.
-  const canOpenMatch = (match) =>
-    Boolean(match.homePlayerId && match.challengerPlayerId) && canScoreMatch(tournament, match, actor)
+  const canOpenMatch = (match) => matchIsReady(tournament, match) && canScoreMatch(tournament, match, actor)
   const openableToday = dayMatches.some(canOpenMatch)
   const scoringMatch = matches.find((m) => m.id === scoringMatchId)
+
+  // A side's name for the scorecard: one player, or a pair ("Tom & Iain").
+  const sideLabel = (match, side) => {
+    const players = sidePlayerIds(match, side).map((id) => playersById[id]).filter(Boolean)
+    if (players.length === 1) return players[0]
+    const first = (p) => p.name.split(' ')[0]
+    return {
+      name: players.map((p) => p.name).join(' & '),
+      shortName: players.map(first).join(' & '),
+      initials: players.map((p) => p.name[0].toUpperCase()).join(''),
+    }
+  }
 
   const header = (
     <Header
@@ -165,16 +179,29 @@ function TournamentApp({ data, admin }) {
         {header}
         <main className="page">
           {syncBanner}
-          <Scorecard
-            key={scoringMatch.id}
-            tournament={tournament}
-            match={scoringMatch}
-            home={playersById[scoringMatch.homePlayerId]}
-            challenger={playersById[scoringMatch.challengerPlayerId]}
-            actor={actor}
-            scoring={scoring}
-            onBack={back}
-          />
+          {formatOf(tournament, scoringMatch).kind === 'MATCH' ? (
+            <Scorecard
+              key={scoringMatch.id}
+              tournament={tournament}
+              match={scoringMatch}
+              home={sideLabel(scoringMatch, 'HOME')}
+              challenger={sideLabel(scoringMatch, 'CHALLENGERS')}
+              actor={actor}
+              scoring={scoring}
+              onBack={back}
+            />
+          ) : (
+            <StrokeScorecard
+              key={scoringMatch.id}
+              tournament={tournament}
+              match={scoringMatch}
+              home={playersById[scoringMatch.homePlayerId]}
+              challenger={playersById[scoringMatch.challengerPlayerId]}
+              actor={actor}
+              scoring={scoring}
+              onBack={back}
+            />
+          )}
         </main>
       </div>
     )
@@ -200,7 +227,7 @@ function TournamentApp({ data, admin }) {
             points={points}
             projected={projected}
             target={targetPoints}
-            totalMatches={matches.length}
+            totalPoints={totalPointsAvailable(tournament)}
           />
         )}
 
@@ -232,11 +259,11 @@ function TournamentApp({ data, admin }) {
                     : "Tap your group's matches to enter scores."}
                 </p>
               )}
+              <DayFormatBar tournament={tournament} day={activeDay} />
               <MatchBoard
+                tournament={tournament}
                 matches={dayMatches}
-                teams={teams}
                 playersById={playersById}
-                holesPerMatch={holesPerMatch}
                 canOpen={canOpenMatch}
                 onOpen={openScorecard}
               />
@@ -244,6 +271,7 @@ function TournamentApp({ data, admin }) {
           )}
           {tab === 'Rankings' && (
             <RankingsView
+              tournament={tournament}
               rankings={getPlayerRankings(tournament)}
               teams={teams}
               currentPlayerId={currentPlayerId}

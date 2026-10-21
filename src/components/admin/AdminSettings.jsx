@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { setTargetPoints } from '../../lib/admin.js'
+import { totalPointsAvailable } from '../../lib/formats.js'
+import { formatPoints } from '../../lib/tournament.js'
 import { addAdmin, listAdmins, removeAdmin } from '../../state/adminApi.js'
 
 function AdminList({ signedInEmail }) {
@@ -71,7 +73,16 @@ function AdminList({ signedInEmail }) {
 }
 
 export default function AdminSettings({ tournament, run, signedInEmail, onClearScores }) {
-  const { targetPoints, matches } = tournament
+  const { targetPoints } = tournament
+  const available = totalPointsAvailable(tournament)
+  // More than half the points available guarantees a win.
+  const decisive = Math.floor(available / 2) + 0.5
+  const targetProblem =
+    targetPoints > available
+      ? `Only ${available} points are available with the current formats, so nobody can reach ${formatPoints(targetPoints)}.`
+      : targetPoints <= available / 2
+        ? `Both teams could reach ${formatPoints(targetPoints)}. More than half the points (${formatPoints(decisive)}) guarantees a winner.`
+        : null
 
   return (
     <div className="admin-settings">
@@ -87,14 +98,15 @@ export default function AdminSettings({ tournament, run, signedInEmail, onClearS
       <section className="settings-block">
         <h3>Points to win</h3>
         <p className="settings-help">
-          {matches.length} points are available in total. A team needs this many to win the cup.
+          {available} points are available with the current formats ({formatPoints(decisive)} is more than
+          half). A team needs this many to win the cup.
         </p>
         <input
           key={targetPoints}
           className="text-input number-input"
           type="number"
           min="0.5"
-          max={matches.length}
+          max={available}
           step="0.5"
           defaultValue={targetPoints}
           aria-label="Points to win"
@@ -102,6 +114,7 @@ export default function AdminSettings({ tournament, run, signedInEmail, onClearS
             if (run(setTargetPoints, e.target.value)) e.target.value = targetPoints
           }}
         />
+        {targetProblem && <p className="warning-box target-warning">{targetProblem}</p>}
       </section>
 
       <section className="settings-block settings-danger">
